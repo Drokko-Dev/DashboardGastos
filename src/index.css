@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #6366f1;
+  --color-brand-bg: #f8fafc;
+  --radius-card: 2rem;
+}
+
+/* Estilos Globales */
+body {
+  background-color: var(--color-brand-bg);
+  color: #1e293b;
+  font-family: "Inter", sans-serif;
+}
+
+/* Componentes Personalizados */
+.dashboard-container {
+  max-width: 72rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.card {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-card);
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* Tabla Estilizada */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.custom-table th {
+  background: #f8fafc;
+  padding: 1.25rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 900;
+}
+
+.custom-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Botones */
+.btn-primary {
+  background: #0f172a;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  transition: transform 0.2s;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
