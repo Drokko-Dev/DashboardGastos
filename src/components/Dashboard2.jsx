@@ -39,7 +39,9 @@ export default function Dashboard({ session }) {
   const [gastosRaw, setGastosRaw] = useState([]);
   const [dataBarras, setDataBarras] = useState([]);
   const [dataTorta, setDataTorta] = useState([]);
-  const [totalMes, setTotalMes] = useState(0);
+  const [totalMesGasto, setTotalMesGasto] = useState(0);
+  const [totalMesIngreso, setTotalMesIngreso] = useState(0);
+  const [totalMesAhorro, setTotalMesAhorro] = useState(0);
 
   // Estados para la vinculación
   const [telegramId, setTelegramId] = useState(null);
@@ -94,11 +96,23 @@ export default function Dashboard({ session }) {
 
     if (!error && gastos) {
       setGastosRaw(gastos);
-      const suma = gastos.reduce(
-        (acc, g) => acc + Number(g.amount || g.monto || 0),
-        0
-      );
-      setTotalMes(suma);
+      console.log(gastos);
+
+      /* Suma de Gastos Mes */
+      const sumaG = gastos
+        .filter((g) => g.type === "gasto")
+        .reduce((acc, g) => acc + Number(g.amount || g.monto || 0), 0);
+      setTotalMesGasto(sumaG);
+      /* Suma de Ingresos Mes */
+      const sumaI = gastos
+        .filter((g) => g.type === "ingreso")
+        .reduce((acc, i) => acc + Number(i.amount || i.monto || 0), 0);
+      setTotalMesIngreso(sumaI);
+      /* Suma de Ahorros Mes */
+      const sumaA = gastos
+        .filter((g) => g.type === "ahorro")
+        .reduce((acc, a) => acc + Number(a.amount || a.monto || 0), 0);
+      setTotalMesAhorro(sumaA);
 
       const porFecha = gastos.reduce((acc, g) => {
         const f = g.created_at.split("T")[0];
@@ -111,11 +125,13 @@ export default function Dashboard({ session }) {
           .reverse()
       );
 
-      const porCat = gastos.reduce((acc, g) => {
-        const c = g.category || "Otros";
-        acc[c] = (acc[c] || 0) + Number(g.amount || g.monto || 0);
-        return acc;
-      }, {});
+      const porCat = gastos
+        .filter((g) => g.type === "gasto")
+        .reduce((acc, g) => {
+          const c = g.category || "Otros";
+          acc[c] = (acc[c] || 0) + Number(g.amount || g.monto || 0);
+          return acc;
+        }, {});
       setDataTorta(
         Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] }))
       );
@@ -238,11 +254,16 @@ export default function Dashboard({ session }) {
   }
 
   // VISTA B: El Dashboard con tus gráficos originales
+  const saldoTotal = totalMesIngreso - totalMesGasto;
   return (
     <>
       <Navbar nickname={nickname} session={session} />
       <div className="resumen-container">
-        <ResumenCards totalMes={totalMes} gastoMes={totalMes} ahorroMes={0} />
+        <ResumenCards
+          totalMes={saldoTotal.toLocaleString("es-CL")}
+          gastoMes={totalMesGasto.toLocaleString("es-CL")}
+          ahorroMes={totalMesIngreso.toLocaleString("es-CL")}
+        />
 
         <div className="charts-grid">
           {/* Gráfico de Torta: Gastos por Categoría */}
@@ -379,7 +400,7 @@ export default function Dashboard({ session }) {
                     />
                     <XAxis
                       dataKey="mesNombre"
-                      stroke="#94a3b8"
+                      stroke="#a6c0e5"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
@@ -394,7 +415,7 @@ export default function Dashboard({ session }) {
                       }
                     />
                     <Tooltip
-                      cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
+                      cursor={{ fill: "rgba(255, 255, 255, 0.015)" }}
                       contentStyle={{
                         backgroundColor: "#2e2e2e",
                         border: "1px solid #00000034",
@@ -432,7 +453,7 @@ export default function Dashboard({ session }) {
         </div>
 
         <section className="tickets">
-          <h1 className="tituloGastos">Resumen de Movimientos</h1>
+          <h1 className="tituloGastos">Resumen Últimos Movimientos</h1>
           <div className="header">
             <h1>Fecha</h1>
             <h1>Descripcion</h1>
@@ -440,14 +461,18 @@ export default function Dashboard({ session }) {
             <h1>Monto</h1>
           </div>
           <div className="ticket">
-            {gastosRaw.map((g, i) => (
+            {gastosRaw.slice(0, 10).map((g, i) => (
               <article className="ticket-card" key={g.id}>
                 <p className="fecha-registro">
                   {g.created_at.replace("T", " ").slice(0, 16)}
                 </p>
                 <p>{g.description_ia_bot || "Sin descripción"}</p>
                 <h2>{g.category || "GENERAL"}</h2>
-                <span>${Number(g.amount || g.monto).toLocaleString()}</span>
+                <span
+                  style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
+                >
+                  ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                </span>
               </article>
             ))}
           </div>

@@ -470,7 +470,6 @@ text {
   .tickets .ticket article span {
     grid-column: 2 / 3;
     text-align: right;
-    color: #d33434; /* O el color que prefieras para el monto */
   }
 
   .tickets .ticket article p:nth-child(2) {
