@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import {
+  LineChart,
+  Line,
   BarChart,
   Bar,
   XAxis,
@@ -134,6 +136,44 @@ export default function Dashboard({ session }) {
       alert("Error al vincular: " + error.message);
     }
   }
+  const añoHoy = new Date().getFullYear();
+  const infoGrafico = (gastosRaw || []).reduce(
+    (acc, g) => {
+      const fecha = new Date(g.created_at);
+      const año = fecha.getFullYear();
+      const mesNumero = fecha.getMonth() + 1; // Enero es 1, Febrero 2...
+      const monto = Number(g.amount || g.monto || 0);
+
+      // Buscamos si el mes ya existe en nuestro acumulador
+      const existe = acc.resultados.find((item) => item.mes === mesNumero);
+      if (añoHoy === año) {
+        if (existe) {
+          existe.total += monto;
+        } else {
+          acc.resultados.push({ mes: mesNumero, total: monto });
+        }
+      }
+
+      // Guardamos el año del último registro para el título
+      return acc;
+    },
+    { resultados: [], añoActual: añoHoy }
+  );
+
+  // 2. Ordenamos los meses numéricamente de forma segura
+  const dataLineas = infoGrafico.resultados.sort((a, b) => a.mes - b.mes);
+  const añoParaTitulo = infoGrafico.añoActual;
+
+  console.log("Datos para el gráfico:", dataLineas);
+  console.log("Año detectado:", añoParaTitulo);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   if (loading)
     return (
@@ -234,6 +274,70 @@ export default function Dashboard({ session }) {
           </div>
 
           {/* Aquí puedes agregar un segundo gráfico (ej: Barras) en el futuro */}
+          <div className="chart-card">
+            <div className="chart-header">
+              {/* Usamos el año extraído en el título */}
+              <h2 style={{ color: "#ffffff" }}>
+                Tendencia de Gastos {añoParaTitulo}
+              </h2>
+              <p style={{ color: "#94a3b8" }}>Meses del año (1-12)</p>
+            </div>
+
+            <div className="chart-content">
+              <ResponsiveContainer width="100%" height="100%">
+                {isMobile ? (
+                  /* VISTA CELULAR: Barras Horizontales */
+                  <BarChart
+                    data={dataLineas}
+                    layout="vertical"
+                    margin={{ left: 20, right: 20 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="mes"
+                      type="category"
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      width={70}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        backgroundColor: "#1c1c1c",
+                        border: "1px solid #2e2e2e",
+                      }}
+                    />
+                    <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={20}>
+                      {dataLineas.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill="#006D77" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  /* VISTA WEB: Gráfico de Líneas */
+                  <LineChart data={dataLineas}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#2e2e2e"
+                      vertical={false}
+                    />
+                    <XAxis dataKey="mes" stroke="#94a3b8" />
+                    <YAxis
+                      /* stroke="#94a3b8" */
+                      tickFormatter={(v) => `$${v.toLocaleString()}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#006D77"
+                      strokeWidth={4}
+                    />
+                    <Tooltip />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
         <section className="tickets">
