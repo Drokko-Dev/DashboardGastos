@@ -1,0 +1,24 @@
+.logout-button {
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+.logout-button:hover {
+  background-color: #c52020; /* Cambia el color de fondo al pasar el cursor */
+  color: white; /* Cambia el color del texto al pasar el cursor */
+  /* Suaviza la transición */
+}
+.logout-button:active {
+  transform: scale(0.95); /* Efecto de presionar el botón */
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --font-family: "Manrope", sans-serif;
+  --color-background-dark: #0f1323;
+  --color-primary: #607afb;
+}
+
+body {
+  font-family: var(--font-family);
+}
