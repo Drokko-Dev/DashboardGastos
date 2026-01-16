@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import {
   LineChart,
   Line,
+  LabelList,
   BarChart,
   Bar,
   XAxis,
@@ -137,12 +138,30 @@ export default function Dashboard({ session }) {
     }
   }
   const añoHoy = new Date().getFullYear();
+  const NOMBRES_MESES = [
+    "",
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
   const infoGrafico = (gastosRaw || []).reduce(
     (acc, g) => {
+      /* console.log(g); */
+
       const fecha = new Date(g.created_at);
       const año = fecha.getFullYear();
       const mesNumero = fecha.getMonth() + 1; // Enero es 1, Febrero 2...
       const monto = Number(g.amount || g.monto || 0);
+      const mesNombre = NOMBRES_MESES[mesNumero];
 
       // Buscamos si el mes ya existe en nuestro acumulador
       const existe = acc.resultados.find((item) => item.mes === mesNumero);
@@ -150,7 +169,11 @@ export default function Dashboard({ session }) {
         if (existe) {
           existe.total += monto;
         } else {
-          acc.resultados.push({ mes: mesNumero, total: monto });
+          acc.resultados.push({
+            mes: mesNumero,
+            mesNombre: mesNombre,
+            total: monto,
+          });
         }
       }
 
@@ -283,57 +306,125 @@ export default function Dashboard({ session }) {
               <p style={{ color: "#94a3b8" }}>Meses del año (1-12)</p>
             </div>
 
-            <div className="chart-content">
+            <div className="chart-content ">
               <ResponsiveContainer width="100%" height="100%">
                 {isMobile ? (
                   /* VISTA CELULAR: Barras Horizontales */
                   <BarChart
                     data={dataLineas}
                     layout="vertical"
-                    margin={{ left: 20, right: 20 }}
+                    margin={{ left: 5, right: 30, top: 20, bottom: 20 }}
                   >
                     <XAxis type="number" hide />
                     <YAxis
-                      dataKey="mes"
+                      dataKey="mesNombre"
                       type="category"
                       stroke="#94a3b8"
                       fontSize={12}
-                      width={70}
+                      width={70} // Aumentamos de 30 a 70 para que "Enero", "Febrero" quepan bien
+                      tickLine={false}
+                      axisLine={false}
                     />
-                    <Tooltip
-                      cursor={{ fill: "transparent" }}
-                      contentStyle={{
-                        backgroundColor: "#1c1c1c",
-                        border: "1px solid #2e2e2e",
-                      }}
-                    />
-                    <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={20}>
+                    <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={25}>
+                      <LabelList
+                        dataKey="total"
+                        activeBar={false}
+                        content={(props) => {
+                          const { x, y, width, value, viewBox } = props;
+                          // Definimos un umbral: si la barra mide menos de 80px, ponemos el texto afuera
+                          const positionX =
+                            width > 80 ? x + width - 10 : x + width + 10;
+                          const textAnchor = width > 80 ? "end" : "start";
+                          const textColor = width > 80 ? "#ffffff" : "#94a3b8";
+
+                          return (
+                            <text
+                              x={positionX}
+                              y={
+                                y + 17
+                              } /* Ajuste vertical para centrar en la barra */
+                              fill={textColor}
+                              fontSize={11}
+                              fontWeight="bold"
+                              textAnchor={textAnchor}
+                            >
+                              {`$${value.toLocaleString("es-CL")}`}
+                            </text>
+                          );
+                        }}
+                      />
                       {dataLineas.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill="#006D77" />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            entry.mes === new Date().getMonth() + 1
+                              ? "#006D77"
+                              : "#334155"
+                          }
+                        />
                       ))}
                     </Bar>
                   </BarChart>
                 ) : (
                   /* VISTA WEB: Gráfico de Líneas */
-                  <LineChart data={dataLineas}>
+                  <BarChart
+                    data={dataLineas}
+                    layout="horizontal" /* Cambiamos a horizontal para barras verticales */
+                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                  >
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke="#2e2e2e"
                       vertical={false}
                     />
-                    <XAxis dataKey="mes" stroke="#94a3b8" />
+                    <XAxis
+                      dataKey="mesNombre"
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <YAxis
-                      /* stroke="#94a3b8" */
-                      tickFormatter={(v) => `$${v.toLocaleString()}`}
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        `$${value.toLocaleString("es-CL")}`
+                      }
                     />
-                    <Line
-                      type="monotone"
+                    <Tooltip
+                      cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
+                      contentStyle={{
+                        backgroundColor: "#2e2e2e",
+                        border: "1px solid #00000034",
+                        color: "#f3f3f3",
+                        borderRadius: "12px",
+                      }}
+                      itemStyle={{ color: "#f3f3f3" }}
+                      formatter={(value) => `$${value.toLocaleString("es-CL")}`}
+                    />
+                    <Bar
                       dataKey="total"
-                      stroke="#006D77"
-                      strokeWidth={4}
-                    />
-                    <Tooltip />
-                  </LineChart>
+                      fill="#006D77"
+                      radius={[
+                        6, 6, 0, 0,
+                      ]} /* Redondeamos solo las esquinas superiores */
+                      barSize={40}
+                    >
+                      {dataLineas.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          /* Resaltamos el mes actual (Enero) con tu Teal principal */
+                          fill={
+                            entry.mes === new Date().getMonth() + 1
+                              ? "#006D77"
+                              : "#334155"
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 )}
               </ResponsiveContainer>
             </div>
