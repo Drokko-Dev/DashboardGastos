@@ -337,6 +337,38 @@ body {
   justify-content: center;
 }
 
+/* graficos vista movil*/
+
+text {
+  &:hover {
+    border: none !important;
+    outline: none !important;
+    outline-offset: none !important;
+  }
+  &:focus {
+    border: none !important;
+    outline: none !important;
+    outline-offset: none !important;
+  }
+  &:active {
+    border: none !important;
+    outline: none !important;
+    outline-offset: none !important;
+  }
+}
+
+/* Esto elimina el borde naranja en cualquier parte del gráfico */
+.recharts-wrapper *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Específicamente para evitar el destello en dispositivos móviles */
+.recharts-surface {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 /* --- RESPONSIVE DESIGN --- */
 
 @media (max-width: 768px) {
@@ -365,11 +397,11 @@ body {
   }
 
   .profile-name {
-    font-size: 15px;
+    font-size: 20px;
     margin-bottom: 5px;
   }
   .profile-email {
-    font-size: 10px;
+    font-size: 12px;
   }
   .profile-img {
     width: 40px;
