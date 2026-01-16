@@ -186,6 +186,30 @@ export default function Dashboard({ session }) {
         </div>
       </header>
 
+      <div className="card header-main">
+        <div className="flex items-center gap-4">
+          <div className="bg-indigo-600 p-3 rounded-2xl text-white">
+            <LayoutDashboard size={28} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black">Mi Panel Financiero</h1>
+            <p className="text-slate-500 flex items-center gap-2">
+              <Wallet size={14} /> {session.user.email}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Total
+            </p>
+            <p className="text-2xl font-black text-indigo-600">
+              ${totalMes.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* GRÁFICOS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="card">
