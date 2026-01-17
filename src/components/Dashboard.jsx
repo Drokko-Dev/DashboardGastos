@@ -122,7 +122,7 @@ export default function Dashboard({ session }) {
       setDataBarras(
         Object.keys(porFecha)
           .map((f) => ({ fecha: f, total: porFecha[f] }))
-          .reverse()
+          .reverse(),
       );
 
       const porCat = gastos
@@ -133,7 +133,7 @@ export default function Dashboard({ session }) {
           return acc;
         }, {});
       setDataTorta(
-        Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] }))
+        Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] })),
       );
     }
   }
@@ -196,7 +196,7 @@ export default function Dashboard({ session }) {
       // Guardamos el año del último registro para el título
       return acc;
     },
-    { resultados: [], añoActual: añoHoy }
+    { resultados: [], añoActual: añoHoy },
   );
 
   // 2. Ordenamos los meses numéricamente de forma segura
@@ -365,6 +365,7 @@ export default function Dashboard({ session }) {
                       width={70} // Aumentamos de 30 a 70 para que "Enero", "Febrero" quepan bien
                       tickLine={false}
                       axisLine={false}
+                      interval={0}
                     />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={25}>
                       <LabelList
@@ -382,7 +383,7 @@ export default function Dashboard({ session }) {
                             <text
                               x={positionX}
                               y={
-                                y + 17
+                                y + 14
                               } /* Ajuste vertical para centrar en la barra */
                               fill={textColor}
                               fontSize={11}
@@ -411,7 +412,7 @@ export default function Dashboard({ session }) {
                   <BarChart
                     data={dataLineas}
                     layout="horizontal" /* Cambiamos a horizontal para barras verticales */
-                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                    margin={{ top: 15, right: 30, left: 0, bottom: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -424,6 +425,10 @@ export default function Dashboard({ session }) {
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
+                      interval={0}
+                      angle={-45}
+                      height={36}
+                      textAnchor="end"
                     />
                     <YAxis
                       stroke="#94a3b8"
@@ -490,7 +495,7 @@ export default function Dashboard({ session }) {
                   {g.created_at.replace("T", " ").slice(0, 16)}
                 </p>
                 <p>{g.description_ia_bot || "Sin descripción"}</p>
-                <h2>{g.category || "GENERAL"}</h2>
+                <h2 className="category">{g.category || "GENERAL"}</h2>
                 <span
                   style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
                 >
