@@ -244,7 +244,7 @@ export default function Dashboard({ session }) {
   // VISTA A: Si no está vinculado, mostramos el formulario
   if (!telegramId) {
     return (
-      <div className="dashboard-container flex items-center justify-center min-h-[70vh]">
+      <div className="flex items-center justify-center min-h-[70vh]">
         <div className="card max-w-md w-full text-center shadow-2xl border-t-4 border-indigo-500">
           <div className="bg-indigo-50 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
             <LinkIcon className="text-indigo-600" size={40} />

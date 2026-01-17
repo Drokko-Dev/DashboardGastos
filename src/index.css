@@ -99,7 +99,27 @@
   }
 }
 
-/* Estilos Globales */
+/*! Vincular Telegram */
+.card {
+  padding: 2em;
+  background: white !important;
+  border-radius: 10px;
+  button {
+    background-color: #6366f1;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    &:hover {
+      background-color: #4f46e5;
+    }
+  }
+}
+
+/*! Estilos Globales */
 body {
   background-color: #121212;
   color: #1e293b;
@@ -371,11 +391,9 @@ body {
       article p:nth-child(2) {
         font-size: 20px;
         align-self: center;
-
         white-space: nowrap; /* Evita que el texto salte de línea */
         overflow: hidden; /* Esconde lo que sobra */
         text-overflow: ellipsis; /* Agrega los "..." al final */
-
         width: 100%; /* Ocupa el ancho de su columna del grid */
         max-width: 200px; /* Ajusta este valor según el ancho de tu columna */
       }
@@ -408,10 +426,12 @@ body {
         background-color: rgba(0, 109, 119, 0.1);
         color: #12ccdd; /* Tu Teal principal */
         border: 1px solid #0db3c27a;
+        align-self: center;
       }
       span {
         font-size: 20px;
         font-weight: 600;
+        align-self: center;
       }
     }
   }
@@ -609,7 +629,10 @@ text {
     white-space: normal; /* Permitimos que salte de línea en móvil */
     max-width: none;
     font-size: 16px;
+    white-space: normal;
+    word-break: break-word;
     justify-self: start;
+    text-align: justify;
   }
 
   .tickets .ticket article .category {
