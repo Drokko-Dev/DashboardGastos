@@ -78,6 +78,22 @@ export default function Dashboard() {
 
   const añoHoy = new Date().getFullYear();
 
+  const [privateStates, setPrivateStates] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem("privacySettings"));
+    return saved || { total: false, gasto: false, ingreso: false };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("privacySettings", JSON.stringify(privateStates));
+  }, [privateStates]);
+
+  const togglePrivacy = (key) => {
+    setPrivateStates((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   useEffect(() => {
     if (session?.user) {
       checkUserLink();
@@ -244,9 +260,25 @@ export default function Dashboard() {
       <Navbar nickname={nickname} session={session} role={role} />
       <div className="resumen-container">
         <ResumenCards
-          totalMes={(totalMesIngreso - totalMesGasto).toLocaleString("es-CL")}
-          gastoMes={totalMesGasto.toLocaleString("es-CL")}
-          ahorroMes={totalMesIngreso.toLocaleString("es-CL")}
+          // Lógica de visualización individual
+          totalMes={
+            privateStates.total
+              ? "********"
+              : (totalMesIngreso - totalMesGasto).toLocaleString("es-CL")
+          }
+          gastoMes={
+            privateStates.gasto
+              ? "********"
+              : totalMesGasto.toLocaleString("es-CL")
+          }
+          ahorroMes={
+            privateStates.ingreso
+              ? "********"
+              : totalMesIngreso.toLocaleString("es-CL")
+          }
+          // Props nuevas para los ojos
+          states={privateStates}
+          onToggle={togglePrivacy}
         />
 
         <div className="charts-grid">
@@ -495,7 +527,7 @@ export default function Dashboard() {
           <div className="tickets-header">
             <h1 className="tituloGastos">Resumen Movimientos</h1>
             <Link to="/detalle">
-              <button className="tickets-detalle">Ver Todo</button>
+              <button className="tickets-button btn-detalle">Detalle</button>
             </Link>
           </div>
           <div className="header">

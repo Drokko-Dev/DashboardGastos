@@ -110,9 +110,28 @@ export function Detalle() {
         <section className="tickets">
           <div className="tickets-header">
             <h1 className="tituloGastos">Detalle de Movimientos</h1>
-            <Link to="/">
-              <button className="tickets-detalle">Inicio</button>
-            </Link>
+            <div className="tickets-buttons">
+              <button className="tickets-button btn-add">
+                {" "}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={25}
+                  height={25}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  className="icon icon-tabler icons-tabler-outline icon-tabler-plus"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" />
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+              <Link to="/">
+                <button className="tickets-button btn-detalle">Inicio</button>
+              </Link>
+            </div>
           </div>
           <div className="header">
             <h1>Fecha</h1>
