@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
 import Login from "./components/Login";
-import Dashboard from "./components/Dashboard2";
+import Dashboard from "./components/Dashboard";
+import { Detalle } from "./components/Detalle";
 
-function App() {
+export function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {

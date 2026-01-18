@@ -1,4 +1,4 @@
-export function Navbar({ session, nickname }) {
+export function Navbar({ session, nickname, role }) {
   return (
     <header className="navbar">
       <div className="dashboard-container">
@@ -25,7 +25,10 @@ export function Navbar({ session, nickname }) {
 
         <div className="profileIcon">
           <div className="profile-container">
-            <span className="profile-name">{nickname || "Usuario"}</span>
+            <div className="profile-name">
+              <span className="nickname">{nickname || "Usuario"} </span>
+              <span className="roles">{role === "admin" ? `${role}` : ""}</span>
+            </div>
             <span className="profile-email">{session.user.email}</span>
             <img className="profile-img" src="./banana.png" alt="Avatar" />
           </div>

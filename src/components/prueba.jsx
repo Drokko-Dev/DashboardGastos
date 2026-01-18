@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Importamos el nuevo contexto
 import {
-  LineChart,
-  Line,
-  LabelList,
   BarChart,
   Bar,
   XAxis,
@@ -15,13 +14,9 @@ import {
   Pie,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
-import {
-  LayoutDashboard,
-  LogOut,
-  Wallet,
-  Link as LinkIcon,
-} from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 import { Navbar } from "./Navbar";
 import { ResumenCards } from "./ResumenCards";
 
@@ -33,59 +28,84 @@ const COLORS = [
   "#8b5cf6",
   "#ec4899",
 ];
+const NOMBRES_MESES = [
+  "",
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
 
-export default function Dashboard({ session }) {
-  // Estados para los datos
+export default function Dashboard() {
+  const { session } = useAuth(); // Obtenemos la sesión global
+
+  // Estados de datos
   const [gastosRaw, setGastosRaw] = useState([]);
   const [dataBarras, setDataBarras] = useState([]);
   const [dataTorta, setDataTorta] = useState([]);
-  const [totalMes, setTotalMes] = useState(0);
+  const [totalMesGasto, setTotalMesGasto] = useState(0);
+  const [totalMesIngreso, setTotalMesIngreso] = useState(0);
 
-  // Estados para la vinculación
+  // Estados de perfil y UI
   const [telegramId, setTelegramId] = useState(null);
   const [nickname, setNickname] = useState(null);
+  const [role, setRole] = useState(null);
   const [inputID, setInputID] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const añoHoy = new Date().getFullYear();
 
   useEffect(() => {
-    checkUserLink();
+    if (session?.user) {
+      checkUserLink();
+    }
+  }, [session]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 1. Verificar si el usuario ya está vinculado
   async function checkUserLink() {
     setLoading(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id_telegram")
+        .eq("auth_id", session.user.id)
+        .maybeSingle();
 
-    // 1. Buscamos el perfil vinculado
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id_telegram")
-      .eq("auth_id", session.user.id)
-      .single();
+      if (profile?.id_telegram) {
+        setTelegramId(profile.id_telegram);
+        const { data: userData } = await supabase
+          .from("users")
+          .select("full_name, role")
+          .eq("id_telegram", profile.id_telegram)
+          .maybeSingle();
 
-    if (profile?.id_telegram) {
-      setTelegramId(profile.id_telegram);
-
-      // 2. Buscamos el nombre en la tabla users usando el id_telegram
-      // NOTA: Usamos { data: userData } para renombrar 'data' a 'userData'
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("full_name")
-        .eq("id_telegram", profile.id_telegram)
-        .single();
-
-      // Verificamos que userData exista antes de setear el nickname
-      if (userData) {
-        setNickname(userData.full_name);
+        if (userData) {
+          setNickname(userData.full_name);
+          setRole(userData.role);
+        }
+        await fetchExpenses();
       }
-
-      // 3. Cargamos los gastos
-      fetchExpenses();
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
-  // 2. Cargar los gastos (Tu lógica original)
   async function fetchExpenses() {
     const { data: gastos, error } = await supabase
       .from("gastos")
@@ -94,155 +114,107 @@ export default function Dashboard({ session }) {
 
     if (!error && gastos) {
       setGastosRaw(gastos);
-      const suma = gastos.reduce(
-        (acc, g) => acc + Number(g.amount || g.monto || 0),
-        0
-      );
-      setTotalMes(suma);
+      processChartData(gastos);
+    }
+  }
 
-      const porFecha = gastos.reduce((acc, g) => {
-        const f = g.created_at.split("T")[0];
-        acc[f] = (acc[f] || 0) + Number(g.amount || g.monto || 0);
-        return acc;
-      }, {});
-      setDataBarras(
-        Object.keys(porFecha)
-          .map((f) => ({ fecha: f, total: porFecha[f] }))
-          .reverse()
-      );
+  function processChartData(gastos) {
+    // Cálculo de Totales
+    const sumaG = gastos
+      .filter((g) => g.type === "gasto")
+      .reduce((acc, g) => acc + Number(g.amount || g.monto || 0), 0);
+    const sumaI = gastos
+      .filter((g) => g.type === "ingreso")
+      .reduce((acc, i) => acc + Number(i.amount || i.monto || 0), 0);
+    setTotalMesGasto(sumaG);
+    setTotalMesIngreso(sumaI);
 
-      const porCat = gastos.reduce((acc, g) => {
+    // Datos para Torta
+    const porCat = gastos
+      .filter((g) => g.type === "gasto")
+      .reduce((acc, g) => {
         const c = g.category || "Otros";
         acc[c] = (acc[c] || 0) + Number(g.amount || g.monto || 0);
         return acc;
       }, {});
-      setDataTorta(
-        Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] }))
-      );
-    }
+    setDataTorta(
+      Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] })),
+    );
   }
 
-  // 3. Función para vincular por primera vez
+  // Lógica de procesamiento de meses para el gráfico de barras
+  const infoGrafico = (gastosRaw || []).reduce(
+    (acc, g) => {
+      const fecha = new Date(g.created_at);
+      if (fecha.getFullYear() === añoHoy) {
+        const mesNum = fecha.getMonth() + 1;
+        const existe = acc.resultados.find((item) => item.mes === mesNum);
+        if (existe) existe.total += Number(g.amount || g.monto || 0);
+        else
+          acc.resultados.push({
+            mes: mesNum,
+            mesNombre: NOMBRES_MESES[mesNum],
+            total: Number(g.amount || g.monto || 0),
+          });
+      }
+      return acc;
+    },
+    { resultados: [] },
+  );
+
+  const dataLineas = infoGrafico.resultados.sort((a, b) => a.mes - b.mes);
+
   async function handleLink() {
     if (!inputID) return alert("Por favor ingresa tu ID");
-
     const { error } = await supabase
       .from("profiles")
       .insert([{ auth_id: session.user.id, id_telegram: inputID }]);
-
     if (!error) {
       setTelegramId(inputID);
       fetchExpenses();
-    } else {
-      alert("Error al vincular: " + error.message);
-    }
+    } else alert("Error: " + error.message);
   }
-  const añoHoy = new Date().getFullYear();
-  const NOMBRES_MESES = [
-    "",
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ];
-  const infoGrafico = (gastosRaw || []).reduce(
-    (acc, g) => {
-      /* console.log(g); */
-
-      const fecha = new Date(g.created_at);
-      const año = fecha.getFullYear();
-      const mesNumero = fecha.getMonth() + 1; // Enero es 1, Febrero 2...
-      const monto = Number(g.amount || g.monto || 0);
-      const mesNombre = NOMBRES_MESES[mesNumero];
-
-      // Buscamos si el mes ya existe en nuestro acumulador
-      const existe = acc.resultados.find((item) => item.mes === mesNumero);
-      if (añoHoy === año) {
-        if (existe) {
-          existe.total += monto;
-        } else {
-          acc.resultados.push({
-            mes: mesNumero,
-            mesNombre: mesNombre,
-            total: monto,
-          });
-        }
-      }
-
-      // Guardamos el año del último registro para el título
-      return acc;
-    },
-    { resultados: [], añoActual: añoHoy }
-  );
-
-  // 2. Ordenamos los meses numéricamente de forma segura
-  const dataLineas = infoGrafico.resultados.sort((a, b) => a.mes - b.mes);
-  const añoParaTitulo = infoGrafico.añoActual;
-
-  console.log("Datos para el gráfico:", dataLineas);
-  console.log("Año detectado:", añoParaTitulo);
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   if (loading)
     return (
-      <div className="p-20 text-center font-bold text-indigo-600">
-        Cargando perfil...
+      <div className="loading-container">
+        <h1>FinanceTracker</h1>
+        <h2>Cargando Perfil...</h2>
       </div>
     );
 
-  // VISTA A: Si no está vinculado, mostramos el formulario
-  if (!telegramId) {
+  if (!telegramId)
     return (
-      <div className="dashboard-container flex items-center justify-center min-h-[70vh]">
-        <div className="card max-w-md w-full text-center shadow-2xl border-t-4 border-indigo-500">
-          <div className="bg-indigo-50 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
-            <LinkIcon className="text-indigo-600" size={40} />
-          </div>
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <div className="card max-w-md w-full text-center shadow-2xl border-t-4 border-indigo-500 p-8">
+          <LinkIcon className="text-indigo-600 mx-auto mb-6" size={40} />
           <h2 className="text-2xl font-black mb-4">Vincular Telegram</h2>
-          <p className="text-slate-500 mb-8 leading-relaxed">
-            Para ver tus gastos personalizados, pega aquí el ID que te dio el
-            bot con el comando{" "}
-            <span className="font-bold text-slate-800">/web</span>.
-          </p>
           <input
             type="text"
-            placeholder="Pega tu ID aquí..."
-            className="w-full p-4 border-2 border-slate-100 rounded-2xl mb-6 text-center text-xl font-mono focus:border-indigo-500 outline-none transition-all"
             value={inputID}
             onChange={(e) => setInputID(e.target.value)}
+            placeholder="Pega tu ID aquí..."
+            className="w-full p-4 border-2 rounded-2xl mb-6 text-center text-xl outline-none"
           />
           <button
             onClick={handleLink}
-            className="btn-primary w-full py-4 text-lg shadow-lg shadow-indigo-200"
+            className="btn-primary w-full py-4 text-lg"
           >
-            Comenzar a visualizar
+            Comenzar
           </button>
         </div>
       </div>
     );
-  }
 
-  // VISTA B: El Dashboard con tus gráficos originales
   return (
     <>
-      <Navbar nickname={nickname} session={session} />
+      <Navbar nickname={nickname} session={session} role={role} />
       <div className="resumen-container">
-        <ResumenCards totalMes={totalMes} gastoMes={totalMes} ahorroMes={0} />
+        <ResumenCards
+          totalMes={(totalMesIngreso - totalMesGasto).toLocaleString("es-CL")}
+          gastoMes={totalMesGasto.toLocaleString("es-CL")}
+          ahorroMes={totalMesIngreso.toLocaleString("es-CL")}
+        />
 
         <div className="charts-grid">
           {/* Gráfico de Torta: Gastos por Categoría */}
@@ -300,9 +272,7 @@ export default function Dashboard({ session }) {
           <div className="chart-card">
             <div className="chart-header">
               {/* Usamos el año extraído en el título */}
-              <h2 style={{ color: "#ffffff" }}>
-                Tendencia de Gastos {añoParaTitulo}
-              </h2>
+              <h2 style={{ color: "#ffffff" }}>Tendencia de Gastos {añoHoy}</h2>
               <p style={{ color: "#94a3b8" }}>Meses del año (1-12)</p>
             </div>
 
@@ -324,6 +294,7 @@ export default function Dashboard({ session }) {
                       width={70} // Aumentamos de 30 a 70 para que "Enero", "Febrero" quepan bien
                       tickLine={false}
                       axisLine={false}
+                      interval={0}
                     />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={25}>
                       <LabelList
@@ -341,7 +312,7 @@ export default function Dashboard({ session }) {
                             <text
                               x={positionX}
                               y={
-                                y + 17
+                                y + 14
                               } /* Ajuste vertical para centrar en la barra */
                               fill={textColor}
                               fontSize={11}
@@ -370,7 +341,7 @@ export default function Dashboard({ session }) {
                   <BarChart
                     data={dataLineas}
                     layout="horizontal" /* Cambiamos a horizontal para barras verticales */
-                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                    margin={{ top: 15, right: 30, left: 0, bottom: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -379,10 +350,14 @@ export default function Dashboard({ session }) {
                     />
                     <XAxis
                       dataKey="mesNombre"
-                      stroke="#94a3b8"
+                      stroke="#a6c0e5"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
+                      interval={0}
+                      angle={-45}
+                      height={36}
+                      textAnchor="end"
                     />
                     <YAxis
                       stroke="#94a3b8"
@@ -394,7 +369,7 @@ export default function Dashboard({ session }) {
                       }
                     />
                     <Tooltip
-                      cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
+                      cursor={{ fill: "rgba(255, 255, 255, 0.015)" }}
                       contentStyle={{
                         backgroundColor: "#2e2e2e",
                         border: "1px solid #00000034",
@@ -432,7 +407,12 @@ export default function Dashboard({ session }) {
         </div>
 
         <section className="tickets">
-          <h1 className="tituloGastos">Resumen de Movimientos</h1>
+          <div className="tickets-header">
+            <h1 className="tituloGastos">Resumen Movimientos</h1>
+            <Link to="/detalle">
+              <button className="tickets-detalle">Ver Todo</button>
+            </Link>
+          </div>
           <div className="header">
             <h1>Fecha</h1>
             <h1>Descripcion</h1>
@@ -440,14 +420,18 @@ export default function Dashboard({ session }) {
             <h1>Monto</h1>
           </div>
           <div className="ticket">
-            {gastosRaw.map((g, i) => (
+            {gastosRaw.slice(0, 10).map((g, i) => (
               <article className="ticket-card" key={g.id}>
                 <p className="fecha-registro">
                   {g.created_at.replace("T", " ").slice(0, 16)}
                 </p>
                 <p>{g.description_ia_bot || "Sin descripción"}</p>
-                <h2>{g.category || "GENERAL"}</h2>
-                <span>${Number(g.amount || g.monto).toLocaleString()}</span>
+                <h2 className="category">{g.category || "GENERAL"}</h2>
+                <span
+                  style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
+                >
+                  ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                </span>
               </article>
             ))}
           </div>
