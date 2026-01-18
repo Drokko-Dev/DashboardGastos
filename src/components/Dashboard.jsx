@@ -46,6 +46,7 @@ export default function Dashboard({ session }) {
   // Estados para la vinculación
   const [telegramId, setTelegramId] = useState(null);
   const [nickname, setNickname] = useState(null);
+  const [role, setRole] = useState(null);
   const [inputID, setInputID] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -71,13 +72,14 @@ export default function Dashboard({ session }) {
       // NOTA: Usamos { data: userData } para renombrar 'data' a 'userData'
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("full_name")
+        .select("full_name, role")
         .eq("id_telegram", profile.id_telegram)
         .single();
 
       // Verificamos que userData exista antes de setear el nickname
       if (userData) {
         setNickname(userData.full_name);
+        setRole(userData.role);
       }
 
       // 3. Cargamos los gastos
@@ -277,7 +279,7 @@ export default function Dashboard({ session }) {
   const saldoTotal = totalMesIngreso - totalMesGasto;
   return (
     <>
-      <Navbar nickname={nickname} session={session} />
+      <Navbar nickname={nickname} session={session} role={role} />
       <div className="resumen-container">
         <ResumenCards
           totalMes={saldoTotal.toLocaleString("es-CL")}
