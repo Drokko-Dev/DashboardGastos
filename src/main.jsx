@@ -4,12 +4,21 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Dashboard from "./components/Dashboard";
 import { Detalle } from "./components/Detalle";
-import Login from "./components/Login"; // Asegúrate de tener tu componente Login
+import Login from "./components/Login";
 import "./index.css";
 
-// Componente para proteger rutas
 const PrivateRoute = ({ children }) => {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
+
+  // Si está cargando la sesión, mostramos un estado neutro
+  if (loading)
+    return (
+      <div className="loading-container">
+        <h2>Verificando...</h2>
+      </div>
+    );
+
+  // Si no hay sesión después de cargar, al login
   return session ? children : <Navigate to="/login" />;
 };
 
@@ -19,14 +28,11 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-
-          {/* Rutas Protegidas */}
           <Route
             path="/"
             element={
               <PrivateRoute>
-                {" "}
-                <Dashboard />{" "}
+                <Dashboard />
               </PrivateRoute>
             }
           />
@@ -34,11 +40,12 @@ createRoot(document.getElementById("root")).render(
             path="/detalle"
             element={
               <PrivateRoute>
-                {" "}
-                <Detalle />{" "}
+                <Detalle />
               </PrivateRoute>
             }
           />
+          {/* Si escriben cualquier otra cosa, al inicio */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
