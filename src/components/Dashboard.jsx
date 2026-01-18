@@ -28,6 +28,20 @@ const COLORS = [
   "#8b5cf6",
   "#ec4899",
 ];
+
+const CATEGORY_COLORS = {
+  Alimentos: "#bbd83a",
+  Transporte: "#F59E0B",
+  Hogar: "#EC4899",
+  Salud: "#1fce7c",
+  Ocio: "#8B5CF6",
+  Mascotas: "#0bc5e6",
+  Compras: "#ef4444",
+  Fijos: "#6366F1",
+  Otros: "#697fa193",
+  Ingreso: "#22C55E",
+};
+
 const NOMBRES_MESES = [
   "",
   "Enero",
@@ -245,6 +259,18 @@ export default function Dashboard() {
             <div className="chart-content">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
+                  <defs>
+                    <pattern
+                      id="pattern-diagonal"
+                      width="4"
+                      height="4"
+                      patternUnits="userSpaceOnUse"
+                      patternTransform="rotate(45)"
+                    >
+                      <rect width="2" height="4" fill="#94A3B8" />{" "}
+                      {/* El color de "Otros" */}
+                    </pattern>
+                  </defs>
                   <Pie
                     data={dataTorta}
                     cx="50%" /* Centrado horizontal exacto */
@@ -254,12 +280,21 @@ export default function Dashboard() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {dataTorta.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
+                    {dataTorta.map((entry, index) => {
+                      const esOtros = entry.name === "Otros";
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          /* Mantenemos el patrón para la rebanada de la torta */
+                          fill={
+                            esOtros
+                              ? "url(#pattern-diagonal)"
+                              : CATEGORY_COLORS[entry.name] || "#ccc"
+                          }
+                          stroke={esOtros ? "#94A3B8" : "none"}
+                        />
+                      );
+                    })}
                   </Pie>
                   <Tooltip
                     /* Estilo del contenedor del cuadrito */
@@ -281,7 +316,30 @@ export default function Dashboard() {
                       `$${Number(value).toLocaleString("es-CL")}`
                     }
                   />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => {
+                      // Si la categoría es "Otros", forzamos el color gris de tu paleta
+                      const esOtros = value === "Otros";
+                      const colorTexto = esOtros
+                        ? "#94A3B8"
+                        : CATEGORY_COLORS[value] || "#94a3b8";
+
+                      return (
+                        <span
+                          style={{
+                            color: colorTexto,
+                            fontSize: "15px",
+                            fontWeight: esOtros ? "bold" : "normal",
+                            marginLeft: "5px",
+                          }}
+                        >
+                          {value}
+                        </span>
+                      );
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -439,20 +497,39 @@ export default function Dashboard() {
             <h1>Monto</h1>
           </div>
           <div className="ticket">
-            {gastosRaw.slice(0, 10).map((g, i) => (
-              <article className="ticket-card" key={g.id}>
-                <p className="fecha-registro">
-                  {g.created_at.replace("T", " ").slice(0, 16)}
-                </p>
-                <p>{g.description_ia_bot || "Sin descripción"}</p>
-                <h2 className="category">{g.category || "GENERAL"}</h2>
-                <span
-                  style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
-                >
-                  ${Number(g.amount || g.monto).toLocaleString("es-CL")}
-                </span>
-              </article>
-            ))}
+            {gastosRaw.slice(0, 10).map((g, i) => {
+              // Obtenemos el color dinámico. Si no existe, usamos un gris por defecto.
+              const categoriaColor = CATEGORY_COLORS[g.category] || "#94a3b8";
+
+              return (
+                <article className="ticket-card" key={g.id}>
+                  <p className="fecha-registro">
+                    {g.created_at.replace("T", " ").slice(0, 16)}
+                  </p>
+                  <p>{g.description_ia_bot || "Sin descripción"}</p>
+
+                  {/* APLICACIÓN DE COLORES DINÁMICOS */}
+                  <h2
+                    className="category"
+                    style={{
+                      color: categoriaColor,
+                      borderColor: categoriaColor,
+                      backgroundColor: `${categoriaColor}15`, // 15 añade un 8% de opacidad para el fondo
+                    }}
+                  >
+                    {g.category || "GENERAL"}
+                  </h2>
+
+                  <span
+                    style={{
+                      color: g.type === "gasto" ? "#ef4444" : "#36d35d",
+                    }}
+                  >
+                    ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                  </span>
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>

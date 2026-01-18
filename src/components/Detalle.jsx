@@ -4,6 +4,19 @@ import { Navbar } from "./Navbar";
 import { useAuth } from "../context/AuthContext"; // Usamos el contexto global
 import { Link } from "react-router-dom";
 
+const CATEGORY_COLORS = {
+  Alimentos: "#bbd83a",
+  Transporte: "#F59E0B",
+  Hogar: "#EC4899",
+  Salud: "#1fce7c",
+  Ocio: "#8B5CF6",
+  Mascotas: "#0bc5e6",
+  Compras: "#ef4444",
+  Fijos: "#6366F1",
+  Otros: "#697fa193",
+  Ingreso: "#22C55E",
+};
+
 export function Detalle() {
   const { session } = useAuth(); // Obtenemos la sesión sin lógica extra
 
@@ -108,20 +121,39 @@ export function Detalle() {
             <h1>Monto</h1>
           </div>
           <div className="ticket">
-            {gastosRaw.map((g, i) => (
-              <article className="ticket-card" key={g.id}>
-                <p className="fecha-registro">
-                  {g.created_at.replace("T", " ").slice(0, 16)}
-                </p>
-                <p>{g.description_ia_bot || "Sin descripción"}</p>
-                <h2 className="category">{g.category || "GENERAL"}</h2>
-                <span
-                  style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
-                >
-                  ${Number(g.amount || g.monto).toLocaleString("es-CL")}
-                </span>
-              </article>
-            ))}
+            {gastosRaw.map((g, i) => {
+              // Obtenemos el color dinámico. Si no existe, usamos un gris por defecto.
+              const categoriaColor = CATEGORY_COLORS[g.category] || "#94a3b8";
+
+              return (
+                <article className="ticket-card" key={g.id}>
+                  <p className="fecha-registro">
+                    {g.created_at.replace("T", " ").slice(0, 16)}
+                  </p>
+                  <p>{g.description_ia_bot || "Sin descripción"}</p>
+
+                  {/* APLICACIÓN DE COLORES DINÁMICOS */}
+                  <h2
+                    className={`category ${g.category}`}
+                    style={{
+                      color: categoriaColor,
+                      borderColor: categoriaColor,
+                      backgroundColor: `${categoriaColor}15`, // 15 añade un 8% de opacidad para el fondo
+                    }}
+                  >
+                    {g.category || "GENERAL"}
+                  </h2>
+
+                  <span
+                    style={{
+                      color: g.type === "gasto" ? "#ef4444" : "#36d35d",
+                    }}
+                  >
+                    ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                  </span>
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>
