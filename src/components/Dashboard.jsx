@@ -251,7 +251,7 @@ export default function Dashboard() {
 
         <div className="charts-grid">
           {/* Gráfico de Torta: Gastos por Categoría */}
-          <div className="chart-card">
+          <div className="chart-card cake">
             <div className="chart-header">
               <h2>Gastos por Categoría</h2>
               <p>Distribución mensual</p>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                     data={dataTorta}
                     cx="50%" /* Centrado horizontal exacto */
                     cy="50%" /* Centrado vertical exacto */
-                    innerRadius={80} /* Radio interno */
+                    innerRadius={75} /* Radio interno */
                     outerRadius={110} /* Radio externo */
                     paddingAngle={5}
                     dataKey="value"
@@ -319,6 +319,14 @@ export default function Dashboard() {
                   <Legend
                     verticalAlign="bottom"
                     height={36}
+                    align="center"
+                    layout="horizontal" // Asegura que se comporte como bloque horizontal
+                    wrapperStyle={{
+                      width: "100%",
+
+                      // Fuerza el ancho total para evitar desbordamiento lateral
+                      // Saca la leyenda del cálculo de posición absoluta del SVG
+                    }}
                     formatter={(value) => {
                       // Si la categoría es "Otros", forzamos el color gris de tu paleta
                       const esOtros = value === "Otros";
@@ -332,7 +340,7 @@ export default function Dashboard() {
                             color: colorTexto,
                             fontSize: "15px",
                             fontWeight: esOtros ? "bold" : "normal",
-                            marginLeft: "5px",
+                            marginLeft: "2px",
                           }}
                         >
                           {value}
