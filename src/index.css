@@ -753,7 +753,7 @@ text {
   } /* Solo icono para el logout */
 }
 
-@media (max-width: 400px) {
+@media (max-width: 361px) {
   .chart-card {
     padding: 1rem; /* Bajamos de 2rem a 1rem */
   }
