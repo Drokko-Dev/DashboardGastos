@@ -27,7 +27,7 @@ export function Navbar({ session, nickname, role }) {
           <div className="profile-container">
             <div className="profile-name">
               <span className="nickname">{nickname || "Usuario"} </span>
-              <span className="roles">{role === "admin" ? `${role}` : ""}</span>
+              {role === "admin" && <span className="roles">{role}</span>}
             </div>
             <span className="profile-email">{session.user.email}</span>
             <img className="profile-img" src="./banana.png" alt="Avatar" />

@@ -752,3 +752,26 @@ text {
     display: none;
   } /* Solo icono para el logout */
 }
+
+@media (max-width: 400px) {
+  .chart-card {
+    padding: 1rem; /* Bajamos de 2rem a 1rem */
+  }
+
+  .resumen-cards {
+    gap: 10px; /* Juntamos un poco más las tarjetas */
+  }
+
+  .nickname {
+    font-size: 14px; /* Ajustamos el texto del perfil */
+  }
+  .legend-cake {
+    font-size: 13px !important;
+  }
+  .tituloGastos {
+    font-size: 17px !important;
+  }
+  .btn-detalle {
+    padding: 4px 10px !important;
+  }
+}

@@ -368,6 +368,7 @@ export default function Dashboard() {
 
                       return (
                         <span
+                          className="legend-cake"
                           style={{
                             color: colorTexto,
                             fontSize: "15px",
@@ -550,7 +551,7 @@ export default function Dashboard() {
 
                   {/* APLICACIÓN DE COLORES DINÁMICOS */}
                   <h2
-                    className="category"
+                    className={`category ${g.category}`}
                     style={{
                       color: categoriaColor,
                       borderColor: categoriaColor,
