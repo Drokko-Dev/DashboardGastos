@@ -4,6 +4,7 @@ import { Navbar } from "./Navbar";
 import { useAuth } from "../context/AuthContext"; // Usamos el contexto global
 import { Link } from "react-router-dom";
 import { Loading } from "./Loading";
+import { AddTransactionButton } from "./FloatingActionButton";
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -15,7 +16,6 @@ const CATEGORY_COLORS = {
   Compras: "#a8dbdb",
   Fijos: "#6366F1",
   Otros: "#697fa193",
-  Ingreso: "#22C55E",
 };
 
 export function Detalle() {
@@ -26,12 +26,29 @@ export function Detalle() {
   const [nickname, setNickname] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Estados para Modal Crear Movimiento
+  const [showModal, setShowModal] = useState(false);
+  const [type, setType] = useState("gasto"); // "gasto" o "ingreso"
+  const [monto, setMonto] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [categoria, setCategoria] = useState("Otros");
+  const [toast, setToast] = useState({ show: false, message: "" });
 
   useEffect(() => {
     if (session?.user) {
       checkUserLink();
     }
   }, [session]);
+
+  // Forzar categoría "Ingreso" si el tipo es ingreso
+  useEffect(() => {
+    if (type === "ingreso") {
+      setCategoria("Ingreso");
+    } else if (type === "gasto" && categoria === "Ingreso") {
+      // Si vuelve a gasto, lo reseteamos a Otros para evitar errores
+      setCategoria("Otros");
+    }
+  }, [type]);
 
   async function checkUserLink() {
     setLoading(true);
@@ -77,33 +94,232 @@ export function Detalle() {
     }
   }
 
+  async function handleSave() {
+    if (!type) return alert("Selecciona Gasto o Ingreso");
+    if (!descripcion) return alert("Falta la descripción");
+    const montoNumerico = Number(monto);
+    if (!monto || isNaN(montoNumerico) || montoNumerico <= 0) {
+      setToast({
+        show: true,
+        message: "⚠️ El monto debe ser un número válido",
+        type: "error",
+      });
+      setTimeout(() => setToast({ show: false }), 3000);
+      return;
+    }
+
+    // Obtenemos id_telegram del perfil cargado previamente
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id_telegram")
+      .eq("auth_id", session.user.id)
+      .single();
+
+    const ahora = new Date();
+
+    // Extraemos los datos según la hora local del usuario
+    const dia = ahora.getDate();
+    const mes = ahora.getMonth() + 1; // Enero es 0
+    const anio = ahora.getFullYear();
+    // Formato YYYY-MM-DD para la columna 'date'
+    const fechaLocal = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+
+    // Formato para created_at (incluyendo la hora local)
+    const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
+    // 'sv-SE' genera YYYY-MM-DD HH:mm:ss que es compatible con Supabase
+    const descripcionFinal =
+      descripcion.trim().length > 60
+        ? descripcion.trim().substring(0, 57) + "..."
+        : descripcion.trim();
+    try {
+      const { error } = await supabase.from("gastos").insert([
+        {
+          origin: "web",
+          amount: Number(monto),
+          description_user: descripcionFinal, // Lo que escribes en el modal
+          description_telegram: descripcionFinal,
+          category: categoria,
+          type: type,
+          id_telegram: profile?.id_telegram, // Vínculo esencial
+          user: nickname, // Tu nombre
+          // Campos de tiempo para tu análisis de BI
+          date: fechaLocal,
+          day: dia,
+          month: mes,
+          year: anio,
+          created_at: createdAtLocal,
+        },
+      ]);
+
+      if (error) throw error;
+
+      setShowModal(false);
+      setToast({
+        show: true,
+        message: "¡Movimiento guardado con éxito! ✅",
+        type: "success",
+      });
+      // Limpiamos estados
+      setMonto("");
+      setDescripcion("");
+      setType(null);
+      fetchExpenses(); // Refresca la tabla automáticamente
+
+      // Desaparece después de 3 segundos
+      setTimeout(() => {
+        setToast({ show: false, message: "" });
+      }, 3000);
+    } catch (err) {
+      console.error("Error completo:", err);
+      alert("No se pudo guardar el movimiento");
+    }
+  }
+
   if (loading) return <Loading />;
 
   return (
     <>
+      {toast.show && (
+        <div
+          className="toast-notification"
+          style={
+            toast.type === "success"
+              ? { backgroundColor: "#064e3b" }
+              : {
+                  backgroundColor: "#4e0606ad",
+                  color: "#c01616",
+                  border: "1px solid #960505",
+                }
+          }
+        >
+          {toast.message}
+        </div>
+      )}
+      {showModal && (
+        <div className="modal-overlay">
+          <div
+            className={
+              type === "gasto" ? `modal-content gasto` : `modal-content ingreso`
+            }
+          >
+            <div
+              className={
+                type === "gasto" ? `modal-title gasto` : `modal-title ingreso`
+              }
+            >
+              <h2>Nuevo</h2>
+              <span>{type === "gasto" ? "Gasto" : "Ingreso"}</span>
+            </div>
+            <div className="type-selector">
+              <button
+                type="button"
+                className={`selector-btn gasto ${type === "gasto" ? "active" : ""}`}
+                onClick={() => setType("gasto")}
+              >
+                Gasto
+              </button>
+              <button
+                type="button"
+                className={`selector-btn ingreso ${type === "ingreso" ? "active" : ""}`}
+                onClick={() => setType("ingreso")}
+              >
+                Ingreso
+              </button>
+            </div>
+            <input
+              type="number"
+              inputMode="numeric" // Esto fuerza el teclado numérico en móviles
+              placeholder="Monto ($)"
+              value={monto}
+              onChange={(e) => setMonto(e.target.value)}
+              className={isNaN(Number(monto)) ? "input-error" : ""}
+            />
+            <div className="input-group">
+              <textarea
+                placeholder="Descripción detallada..."
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                rows="2" // Esto lo hace visualmente más largo hacia abajo
+                className="input-description"
+                maxLength={60} // Un límite razonable para tus reportes
+                style={{ resize: "none" }} // Evita que el usuario lo deforme manualmente
+              />
+              <span
+                style={{
+                  fontSize: "10px",
+                  textAlign: "right",
+                  display: "block",
+                  color: "#94a3b8",
+                }}
+              >
+                {descripcion.length}/60
+              </span>
+            </div>
+            <div className="input-group">
+              <label>Categoría</label>
+              <select
+                value={type === "ingreso" ? "Ingreso" : categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                disabled={type === "ingreso" || !type}
+                style={{
+                  borderLeft: `6px solid ${CATEGORY_COLORS[categoria] || "#2e2e2e"}`,
+                  backgroundColor: type === "ingreso" ? "#1a1a1a" : "#2e2e2e",
+                  cursor: type === "ingreso" ? "not-allowed" : "pointer",
+                  opacity: type === "ingreso" ? 0.6 : 1,
+                }}
+              >
+                {type === "ingreso" ? (
+                  // Si es ingreso, solo renderizamos UNA opción: Ingreso
+                  <option value="Ingreso">● Ingreso</option>
+                ) : (
+                  // Si es gasto, mapeamos todas las categorías de tu objeto
+                  Object.keys(CATEGORY_COLORS)
+                    .filter((cat) => cat !== "Ingreso") // Filtramos para que no salga 'Ingreso' en gastos
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat === "Otros" ? "" : "● "} {cat}
+                      </option>
+                    ))
+                )}
+              </select>
+
+              {/* MENSAJE DE AYUDA: Va aquí abajo */}
+              {type === "ingreso" && (
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: "#c52222",
+                    marginTop: "4px",
+                    display: "block",
+                    fontWeight: "500",
+                  }}
+                >
+                  🚨Los ingresos quedan en la categoria Ingreso!
+                </span>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button onClick={handleSave} className="btn-save">
+                Guardar
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="btn-cancel"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar nickname={nickname} session={session} role={role} />
       <div className="resumen-container">
         <section className="tickets">
           <div className="tickets-header">
-            <h1 className="tituloGastos">Detalle de Movimientos</h1>
+            <h1 className="tituloGastos">Todos los Movimientos</h1>
             <div className="tickets-buttons">
-              <button className="tickets-button btn-add">
-                {" "}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={25}
-                  height={25}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  className="icon icon-tabler icons-tabler-outline icon-tabler-plus"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" />
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
+              <AddTransactionButton onClick={() => setShowModal(true)} />
               <Link to="/">
                 <button className="tickets-button btn-detalle">Inicio</button>
               </Link>
@@ -125,7 +341,9 @@ export function Detalle() {
                   <p className="fecha-registro">
                     {g.created_at.replace("T", " ").slice(0, 16)}
                   </p>
-                  <p>{g.description_ia_bot || "Sin descripción"}</p>
+                  <p className="descripcion-texto">
+                    {g.description_user || "Sin descripción"}
+                  </p>
 
                   {/* APLICACIÓN DE COLORES DINÁMICOS */}
                   <h2

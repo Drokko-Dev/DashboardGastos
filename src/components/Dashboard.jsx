@@ -493,7 +493,7 @@ export default function Dashboard() {
 
         <section className="tickets">
           <div className="tickets-header">
-            <h1 className="tituloGastos">Resumen Movimientos</h1>
+            <h1 className="tituloGastos">Últimos Movimientos</h1>
             <Link to="/detalle">
               <button className="tickets-button btn-detalle">Detalle</button>
             </Link>
@@ -514,7 +514,9 @@ export default function Dashboard() {
                   <p className="fecha-registro">
                     {g.created_at.replace("T", " ").slice(0, 16)}
                   </p>
-                  <p>{g.description_ia_bot || "Sin descripción"}</p>
+                  <p className="descripcion-texto">
+                    {g.description_user || "Sin descripción"}
+                  </p>
 
                   {/* APLICACIÓN DE COLORES DINÁMICOS */}
                   <h2
@@ -523,7 +525,7 @@ export default function Dashboard() {
                       color: categoriaColor,
                       borderColor: categoriaColor,
                       opacity: 0.85,
-                      backgroundColor: `${categoriaColor}15`, // 15 añade un 8% de opacidad para el fondo
+                      backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
                     }}
                   >
                     {g.category || "GENERAL"}

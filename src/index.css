@@ -291,7 +291,7 @@ body {
       &.is-hidden {
         display: none;
       }
-      article p:nth-child(2) {
+      article .descripcion-texto {
         font-size: 20px;
         align-self: center;
         white-space: nowrap; /* Evita que el texto salte de línea */
@@ -299,6 +299,9 @@ body {
         text-overflow: ellipsis; /* Agrega los "..." al final */
         width: 100%; /* Ocupa el ancho de su columna del grid */
         max-width: 200px; /* Ajusta este valor según el ancho de tu columna */
+      }
+      .descripcion-texto::first-letter {
+        text-transform: uppercase;
       }
       .fecha-registro {
         font-size: 16px !important;
@@ -446,6 +449,31 @@ text {
   -webkit-tap-highlight-color: transparent !important;
 }
 
+.toast-notification {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  z-index: 3000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  /* Animación de entrada */
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    bottom: 20px; /* Empezamos más abajo */
+    opacity: 0;
+  }
+  to {
+    bottom: 80px; /* Terminamos donde queremos que se quede */
+    opacity: 1;
+  }
+}
+
 /* --- RESPONSIVE DESIGN --- */
 @media (max-width: 950px) {
   .charts-grid {
@@ -545,6 +573,11 @@ text {
     border-radius: 15px;
     justify-self: start;
   }
+  .toast-notification {
+    font-size: 15px;
+    padding: 12px 24px;
+    width: 220px;
+  }
 }
 
 /* Ajuste extra para pantallas muy pequeñas (iPhone SE, etc) */
@@ -560,6 +593,11 @@ text {
   .btn-logout span:last-child {
     display: none;
   } /* Solo icono para el logout */
+  .toast-notification {
+    font-size: 15px;
+    padding: 12px 24px;
+    width: auto;
+  }
 }
 
 @media (max-width: 361px) {
@@ -579,5 +617,10 @@ text {
   }
   .btn-detalle {
     padding: 4px 10px !important;
+  }
+  .toast-notification {
+    width: 90%; /* Ocupa casi todo el ancho pero con margen */
+    text-align: center;
+    font-size: 13px;
   }
 }

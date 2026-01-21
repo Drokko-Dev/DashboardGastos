@@ -8,6 +8,7 @@ import Login from "./components/Login";
 import "./index.css";
 import "./styles/navbar.css";
 import "./styles/logo.css";
+import "./styles/add_transaction.css";
 
 const PrivateRoute = ({ children }) => {
   const { session, loading } = useAuth();
