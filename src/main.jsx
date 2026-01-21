@@ -6,6 +6,8 @@ import Dashboard from "./components/Dashboard";
 import { Detalle } from "./components/Detalle";
 import Login from "./components/Login";
 import "./index.css";
+import "./styles/navbar.css";
+import "./styles/logo.css";
 
 const PrivateRoute = ({ children }) => {
   const { session, loading } = useAuth();

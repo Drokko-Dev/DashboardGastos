@@ -1,0 +1,167 @@
+.navbar {
+  /* background-color: var(--color-brand-primary); */
+  color: #08afbe;
+  background-color: #1c1c1c;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid #2e2e2e;
+}
+.dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  p {
+    gap: 5px;
+    display: flex;
+    svg {
+      transform: scale(1.2);
+    }
+  }
+}
+.profileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  .btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espacio entre el icono y el texto si decides ponerle */
+
+    /* Colores de tu paleta */
+    background-color: transparent;
+    color: #94a3b8; /* Gris suave para no distraer */
+    border: 1px solid #2e2e2e; /* Tu border-dark */
+
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-logout:hover {
+    cursor: pointer;
+    /* Cambio elegante: fondo rojizo suave y borde rojo */
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+    transform: translateY(-1px); /* Pequeño efecto de levantamiento */
+  }
+
+  .btn-logout:active {
+    transform: translateY(0); /* Efecto de click */
+  }
+}
+.profile-container {
+  display: grid;
+  /* Definimos dos columnas: el texto fluye y la imagen es fija */
+  grid-template-columns: 1fr auto;
+  /* Definimos dos filas para el nombre y el mail */
+  grid-template-rows: auto auto;
+  /* Creamos el mapa del diseño */
+  grid-template-areas:
+    "name img"
+    "email img";
+  gap: 0 12px; /* 0 espacio arriba/abajo, 12px entre texto e imagen */
+  align-items: center;
+  padding: 0 16px;
+  border-left: 1px solid #2e2e2e; /* Color border-dark de tu paleta */
+  border-right: 1px solid #2e2e2e;
+}
+
+.profile-name {
+  grid-area: name;
+  .nickname {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff; /* O el color de tu texto dark */
+    line-height: 1.2;
+  }
+  .roles {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid #6366f1;
+    border-radius: 10px;
+    font-size: 10px; /* Tamaño pequeño y elegante */
+    font-weight: 800; /* Super negrita como pediste */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+}
+
+.profile-email {
+  grid-area: email;
+  font-size: 12px;
+  color: #94a3b8; /* Un gris suave para el mail */
+  line-height: 1.2;
+}
+
+.profile-img {
+  grid-area: img;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #08afbe2f;
+  box-shadow:
+    0 0 15px rgba(8, 175, 190, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.4);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  /* 1. Navbar: De horizontal a vertical o compacta */
+
+  .dashboard-container {
+    flex-direction: column;
+    gap: 15px;
+    padding: 1rem;
+    height: auto;
+  }
+  .nickname {
+    font-size: 14px; /* Ajustamos el texto del perfil */
+  }
+
+  .profile-container {
+    grid-template-areas:
+      "img name"
+      "img email";
+  }
+  .profileIcon {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid #2e2e2e;
+    padding-top: 10px;
+  }
+
+  .profile-container {
+    border: none;
+    padding: 0;
+  }
+
+  .profile-name {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  .profile-email {
+    font-size: 12px;
+  }
+  .profile-img {
+    width: 40px;
+    height: 40px;
+    /* display: none; */
+  }
+}
