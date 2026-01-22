@@ -423,7 +423,7 @@ export function Detalle() {
             <h1>Categoría</h1>
             <h1>Monto</h1>
           </div>
-          <div className="ticket">
+          <div className="ticketDetalle">
             {gastosRaw.map((g, i) => {
               // Obtenemos el color dinámico. Si no existe, usamos un gris por defecto.
               const categoriaColor = CATEGORY_COLORS[g.category] || "#94a3b8";
