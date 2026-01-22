@@ -18,6 +18,19 @@ const CATEGORY_COLORS = {
   Otros: "#697fa193",
 };
 
+const btnDeleteSVG = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="currentColor"
+    className="icon icon-tabler icons-tabler-filled icon-tabler-square-rounded-x"
+  >
+    <path fill="none" d="M0 0h24v24H0z" />
+    <path d="m12 2 .324.001.318.004.616.017.299.013.579.034.553.046c4.785.464 6.732 2.411 7.196 7.196l.046.553.034.579c.005.098.01.198.013.299l.017.616L22 12l-.005.642-.017.616-.013.299-.034.579-.046.553c-.464 4.785-2.411 6.732-7.196 7.196l-.553.046-.579.034c-.098.005-.198.01-.299.013l-.616.017L12 22l-.642-.005-.616-.017-.299-.013-.579-.034-.553-.046c-4.785-.464-6.732-2.411-7.196-7.196l-.046-.553-.034-.579a28.058 28.058 0 0 1-.013-.299l-.017-.616C2.002 12.432 2 12.218 2 12l.001-.324.004-.318.017-.616.013-.299.034-.579.046-.553c.464-4.785 2.411-6.732 7.196-7.196l.553-.046.579-.034c.098-.005.198-.01.299-.013l.616-.017c.21-.003.424-.005.642-.005zm-1.489 7.14a1 1 0 0 0-1.218 1.567L10.585 12l-1.292 1.293-.083.094a1 1 0 0 0 1.497 1.32L12 13.415l1.293 1.292.094.083a1 1 0 0 0 1.32-1.497L13.415 12l1.292-1.293.083-.094a1 1 0 0 0-1.497-1.32L12 10.585l-1.293-1.292-.094-.083z" />
+  </svg>
+);
+
 export function Detalle() {
   const { session } = useAuth(); // Obtenemos la sesión sin lógica extra
 
@@ -33,6 +46,9 @@ export function Detalle() {
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState("Otros");
   const [toast, setToast] = useState({ show: false, message: "" });
+  //Estados para Eliminar datos
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     if (session?.user) {
@@ -94,6 +110,7 @@ export function Detalle() {
     }
   }
 
+  //Funcion para insertar datos en la base
   async function handleSave() {
     if (!type) return alert("Selecciona Gasto o Ingreso");
     if (!descripcion) return alert("Falta la descripción");
@@ -175,6 +192,38 @@ export function Detalle() {
     }
   }
 
+  //Funcion para Eliminar datos de la base
+
+  // Paso 1: Abrir el modal y guardar el ID
+  const confirmDelete = (id) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  // Paso 2: Ejecutar la eliminación real
+  async function executeDelete() {
+    try {
+      const { error } = await supabase
+        .from("gastos")
+        .delete()
+        .eq("id", selectedId);
+
+      if (error) throw error;
+
+      setToast({
+        show: true,
+        message: "Movimiento eliminado 🗑️",
+        type: "success",
+      });
+      setShowDeleteModal(false);
+      fetchExpenses();
+    } catch (err) {
+      setToast({ show: true, message: "Error al eliminar ❌", type: "error" });
+    } finally {
+      setTimeout(() => setToast({ show: false }), 3000);
+    }
+  }
+
   if (loading) return <Loading />;
 
   return (
@@ -184,7 +233,11 @@ export function Detalle() {
           className="toast-notification"
           style={
             toast.type === "success"
-              ? { backgroundColor: "#064e3b" }
+              ? {
+                  backgroundColor: "#064e3b",
+                  color: "#3ec016",
+                  border: "1px solid #119605",
+                }
               : {
                   backgroundColor: "#4e0606ad",
                   color: "#c01616",
@@ -195,6 +248,7 @@ export function Detalle() {
           {toast.message}
         </div>
       )}
+
       {showModal && (
         <div className="modal-overlay">
           <div
@@ -270,21 +324,21 @@ export function Detalle() {
               >
                 {type === "ingreso" ? (
                   // Si es ingreso, solo renderizamos UNA opción: Ingreso
-                  <option value="Ingreso">● Ingreso</option>
+                  <option value="Ingreso">Ingreso</option>
                 ) : (
                   // Si es gasto, mapeamos todas las categorías de tu objeto
                   Object.keys(CATEGORY_COLORS)
                     .filter((cat) => cat !== "Ingreso") // Filtramos para que no salga 'Ingreso' en gastos
                     .map((cat) => (
                       <option key={cat} value={cat}>
-                        {cat === "Otros" ? "" : "● "} {cat}
+                        {cat}
                       </option>
                     ))
                 )}
               </select>
 
               {/* MENSAJE DE AYUDA: Va aquí abajo */}
-              {type === "ingreso" && (
+              {type === "ingreso" ? (
                 <span
                   style={{
                     fontSize: "13px",
@@ -295,6 +349,18 @@ export function Detalle() {
                   }}
                 >
                   🚨Los ingresos quedan en la categoria Ingreso!
+                </span>
+              ) : (
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: "#c52222",
+                    marginTop: "4px",
+                    display: "block",
+                    fontWeight: "500",
+                  }}
+                >
+                  🚨Solo se puede seleccionar 1 Categoria!
                 </span>
               )}
             </div>
@@ -313,6 +379,32 @@ export function Detalle() {
           </div>
         </div>
       )}
+      {/* MODAL DE CONFIRMACIÓN PARA ELIMINAR */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content delete-confirm">
+            <div className="modal-icon-warning">⚠️</div>
+            <h2 className="modal-title-delete">¿Eliminar registro?</h2>
+            <p>
+              Esta acción no se puede deshacer y afectará tus reportes
+              mensuales.
+            </p>
+
+            <div className="modal-actions-horizontal">
+              <button onClick={executeDelete} className="btn-confirm-delete">
+                Eliminar
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="btn-cancel-modal"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Navbar nickname={nickname} session={session} role={role} />
       <div className="resumen-container">
         <section className="tickets">
@@ -338,6 +430,14 @@ export function Detalle() {
 
               return (
                 <article className="ticket-card" key={g.id}>
+                  <button
+                    onClick={() => confirmDelete(g.id)}
+                    className="btn-delete-card"
+                    title="Eliminar"
+                  >
+                    {btnDeleteSVG}
+                  </button>
+
                   <p className="fecha-registro">
                     {g.created_at.replace("T", " ").slice(0, 16)}
                   </p>
