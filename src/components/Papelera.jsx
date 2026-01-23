@@ -2,20 +2,23 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { Navbar } from "./Navbar";
-import CryptoJS from "crypto-js";
 
 export function Papelera() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const [papelera, setPapelera] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (session?.user) fetchTrash();
-  }, [session]);
+    // Solo cargamos si la sesión está lista
+    if (!authLoading && session?.user?.id) {
+      fetchTrash();
+    }
+  }, [session, authLoading]);
 
   async function fetchTrash() {
     setLoading(true);
     try {
+      // Traemos los datos directamente sin procesar descifrado
       const { data, error } = await supabase
         .from("gastos")
         .select("*")
@@ -24,24 +27,9 @@ export function Papelera() {
 
       if (error) throw error;
 
-      const decrypted = data.map((g) => {
-        try {
-          const amount = CryptoJS.AES.decrypt(
-            g.amount,
-            session.user.id,
-          ).toString(CryptoJS.enc.Utf8);
-          const desc = CryptoJS.AES.decrypt(
-            g.description_user,
-            session.user.id,
-          ).toString(CryptoJS.enc.Utf8);
-          return { ...g, amount, description_user: desc };
-        } catch (e) {
-          return { ...g, amount: "0", description_user: "Error de cifrado" };
-        }
-      });
-      setPapelera(decrypted);
+      setPapelera(data);
     } catch (err) {
-      console.error(err);
+      console.error("Error en la carga de papelera:", err);
     } finally {
       setLoading(false);
     }
@@ -52,13 +40,22 @@ export function Papelera() {
       .from("gastos")
       .update({ deleted_at: null })
       .eq("id", id);
+
     if (!error) {
       fetchTrash();
-      alert("Restaurado ✅");
+      alert("Movimiento restaurado ✅");
     }
   }
 
-  if (loading) return <div className="loading">Cargando...</div>;
+  // Pantalla de carga simplificada para el S24
+  if (authLoading || (loading && papelera.length === 0)) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Cargando papelera...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -76,7 +73,7 @@ export function Papelera() {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              className="icon icon-tabler icons-tabler-outline icon-tabler-trash-off"
+              className="icon-trash"
             >
               <path stroke="none" d="M0 0h24v24H0z" />
               <path d="m3 3 18 18M4 7h3m4 0h9M10 11v6M14 14v3M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l.077-.923M18.384 14.373 19 7M9 5V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
@@ -97,6 +94,7 @@ export function Papelera() {
                     {g.deleted_at?.replace("T", " ").slice(0, 16) ||
                       "Procesando..."}
                   </span>
+                  {/* Mostramos la descripción directa */}
                   <h2 className="item-desc">{g.description_user}</h2>
                   <span className="item-cat">{g.category}</span>
                 </div>
@@ -108,6 +106,7 @@ export function Papelera() {
                   <button
                     onClick={() => handleRestore(g.id)}
                     className="btn-restore-circle"
+                    title="Restaurar"
                   >
                     🔄
                   </button>

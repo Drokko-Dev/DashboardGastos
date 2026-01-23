@@ -131,18 +131,20 @@
   z-index: 2500;
 }
 
-/* --- RESPONSIVE (Móvil / S24) --- */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
-    /* Usamos -110vh para asegurar que incluso con el rebote del scroll se oculte */
-    top: -110vh;
+    top: -110dvh; /* Cambiamos a -110dvh para asegurar el ocultamiento total */
     left: 0;
     right: 0;
     width: 100vw;
-    height: 100vh;
-    /* Importante: visibility oculta el elemento para el lector de pantalla y clics accidentales */
+    height: 100dvh; /* dynamic viewport height para evitar el scroll del navegador */
+    background-color: #1a1a1a;
     visibility: hidden;
+    display: flex;
+    flex-direction: column; /* Esto permite usar margin-top: auto abajo */
+    padding: 20px;
+    box-sizing: border-box;
     transition:
       top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
       visibility 0.4s;
@@ -154,24 +156,48 @@
     visibility: visible;
   }
 
-  /* Ajustamos los links para que se vean grandes en toda la pantalla */
+  /* Ajuste de la navegación central */
   .sidebar-nav {
-    width: 80%;
-    text-align: center;
+    flex: 1; /* Ocupa el espacio disponible y empuja el logout hacia abajo */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra los links en el espacio sobrante */
+    align-items: center;
+    width: 100%;
     gap: 20px;
   }
 
   .sidebar-nav a {
-    font-size: 22px; /* Más fácil de tocar con el pulgar */
+    font-size: 22px;
     padding: 20px;
-    justify-content: center;
+    width: 100%;
+    text-align: center;
+    color: white;
+    text-decoration: none;
   }
 
-  /* Botón de cerrar más prominente arriba a la derecha */
+  /* --- BOTÓN LOGOUT ANCLADO AL FONDO --- */
+  .btn-logout-sidebar {
+    margin-top: auto; /* Empuje automático al final del contenedor flex */
+    margin-bottom: 20px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+  }
+
   .close-sidebar {
     position: absolute;
     top: 20px;
     right: 30px;
     font-size: 35px;
+    color: white;
+    background: none;
+    border: none;
+    cursor: pointer;
   }
 }
