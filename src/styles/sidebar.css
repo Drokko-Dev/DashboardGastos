@@ -1,0 +1,179 @@
+/* --- CONTENEDOR PRINCIPAL (En main.jsx) --- */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  /* background-color: #121212; */
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
+  transition: margin 0.3s ease;
+}
+
+/* --- ESTILO DEL SIDEBAR (Menú Deslizable) --- */
+/* --- ESTILO DEL SIDEBAR (Derecha) --- */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%; /* Ahora se esconde a la DERECHA */
+  left: auto; /* Reseteamos la propiedad left */
+  width: 280px;
+  height: 100vh;
+  background-color: #1a1a1a;
+  border-left: 1px solid #2e2e2e; /* Borde al lado izquierdo */
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  transition: right 0.3s ease-in-out; /* Animación desde la derecha */
+  z-index: 3000;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5); /* Sombra hacia la izquierda */
+}
+
+.sidebar.open {
+  right: 0; /* Aparece pegado al borde derecho */
+  left: auto;
+}
+
+/* --- HEADER DEL SIDEBAR --- */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2e2e2e;
+  margin-bottom: 25px;
+  h1 {
+    background: linear-gradient(to right, #6366f1, #07c3e4);
+    -webkit-background-clip: text; /* Corta el fondo con la forma del texto */
+    -webkit-text-fill-color: transparent; /* Hace el texto transparente para ver el fondo */
+    background-clip: text;
+    display: flex;
+    gap: 2px;
+    font-size: 22px;
+    align-items: center;
+  }
+}
+
+.sidebar-header h3 {
+  color: #12ccdd;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.close-sidebar {
+  background: none;
+  border: none;
+  color: #dd0808;
+  font-size: 24px;
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+  &:hover {
+    transform: scale(1.4);
+  }
+}
+
+/* --- NAVEGACIÓN Y BOTÓN SALIR --- */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%; /* Para que el logout pueda ir al fondo */
+}
+
+.sidebar-nav a {
+  padding: 14px 18px;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  h1 {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    align-items: center;
+  }
+}
+
+.sidebar-nav a.active {
+  background: linear-gradient(to right, #6366f1, #07c3e4);
+  color: white;
+}
+
+.btn-logout-sidebar {
+  margin-top: auto; /* Empuja el botón al final del Sidebar */
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* --- OVERLAY (Oscurece el fondo) --- */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px); /* Efecto cristalino */
+  z-index: 2500;
+}
+
+/* --- RESPONSIVE (Móvil / S24) --- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: -100%; /* Escondido ARRIBA de la pantalla */
+    left: 0;
+    right: 0;
+    width: 100vw; /* Toda la pantalla */
+    height: 100vh;
+    border-left: none;
+    border-bottom: 1px solid #2e2e2e;
+    transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Deslizado más fluido */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra el menú verticalmente */
+    align-items: center;
+  }
+
+  .sidebar.open {
+    top: 0; /* Baja a cubrir todo */
+    left: 0;
+    right: 0;
+  }
+
+  /* Ajustamos los links para que se vean grandes en toda la pantalla */
+  .sidebar-nav {
+    width: 80%;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .sidebar-nav a {
+    font-size: 22px; /* Más fácil de tocar con el pulgar */
+    padding: 20px;
+    justify-content: center;
+  }
+
+  /* Botón de cerrar más prominente arriba a la derecha */
+  .close-sidebar {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 35px;
+  }
+}

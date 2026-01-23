@@ -1,3 +1,5 @@
+import "../styles/logo.css";
+
 export function Logo() {
   return (
     <h1 className="brand-title">

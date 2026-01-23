@@ -132,6 +132,7 @@ export default function Dashboard() {
     const { data: gastos, error } = await supabase
       .from("gastos")
       .select("*")
+      .is("deleted_at", null) // Solo traemos los que NO están eliminados
       .order("created_at", { ascending: false });
 
     if (!error && gastos) {
@@ -224,7 +225,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar nickname={nickname} session={session} role={role} />
+      <Navbar />
       <div className="resumen-container">
         <ResumenCards
           // Lógica de visualización individual

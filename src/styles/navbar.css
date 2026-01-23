@@ -28,6 +28,24 @@
   justify-content: center;
   gap: 10px;
 
+  .hamburger {
+    background: none;
+    border: none;
+    color: #12ccdd;
+    border: 2px solid #12ccdda6;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  .hamburger:hover {
+    transform: scale(1.1);
+  }
+
   .btn-logout {
     display: flex;
     align-items: center;

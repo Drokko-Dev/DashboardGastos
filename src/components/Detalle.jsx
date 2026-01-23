@@ -103,6 +103,7 @@ export function Detalle() {
     const { data: gastos, error } = await supabase
       .from("gastos")
       .select("*")
+      .is("deleted_at", null) // Solo traemos los que NO están eliminados
       .order("created_at", { ascending: false });
 
     if (!error && gastos) {
@@ -203,24 +204,27 @@ export function Detalle() {
   // Paso 2: Ejecutar la eliminación real
   async function executeDelete() {
     try {
+      const ahora = new Date();
+      const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
       const { error } = await supabase
         .from("gastos")
-        .delete()
+        .update({ deleted_at: createdAtLocal }) // Marcamos como eliminado
         .eq("id", selectedId);
 
       if (error) throw error;
 
       setToast({
         show: true,
-        message: "Movimiento eliminado 🗑️",
+        message: "Movimiento movido a la papelera 🗑️",
         type: "success",
       });
       setShowDeleteModal(false);
       fetchExpenses();
+      setTimeout(() => {
+        setToast({ show: false, message: "" });
+      }, 3000);
     } catch (err) {
-      setToast({ show: true, message: "Error al eliminar ❌", type: "error" });
-    } finally {
-      setTimeout(() => setToast({ show: false }), 3000);
+      setToast({ show: true, message: "Error al procesar ❌", type: "error" });
     }
   }
 
@@ -405,7 +409,7 @@ export function Detalle() {
         </div>
       )}
 
-      <Navbar nickname={nickname} session={session} role={role} />
+      <Navbar />
       <div className="resumen-container">
         <section className="tickets">
           <div className="tickets-header">
