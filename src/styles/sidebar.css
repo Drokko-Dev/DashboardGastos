@@ -135,25 +135,23 @@
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
-    top: -100%; /* Escondido ARRIBA de la pantalla */
+    /* Usamos -110vh para asegurar que incluso con el rebote del scroll se oculte */
+    top: -110vh;
     left: 0;
     right: 0;
-    width: 100vw; /* Toda la pantalla */
+    width: 100vw;
     height: 100vh;
-    border-left: none;
-    border-bottom: 1px solid #2e2e2e;
-    transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Deslizado más fluido */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Centra el menú verticalmente */
-    align-items: center;
+    /* Importante: visibility oculta el elemento para el lector de pantalla y clics accidentales */
+    visibility: hidden;
+    transition:
+      top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0.4s;
+    z-index: 4000;
   }
 
   .sidebar.open {
-    top: 0; /* Baja a cubrir todo */
-    left: 0;
-    right: 0;
+    top: 0;
+    visibility: visible;
   }
 
   /* Ajustamos los links para que se vean grandes en toda la pantalla */

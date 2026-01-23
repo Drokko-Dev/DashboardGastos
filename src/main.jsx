@@ -10,6 +10,7 @@ import { Papelera } from "./components/Papelera"; // Nueva
 import { Seguridad } from "./components/Seguridad"; // Nueva
 import Login from "./components/Login";
 import { Sidebar } from "./components/Sidebar"; // El nuevo Sidebar
+import { Loading } from "./components/Loading";
 
 // ESTILOS
 import "./index.css";
@@ -23,12 +24,7 @@ import "./styles/seguridad.css";
 const PrivateRoute = ({ children }) => {
   const { session, loading } = useAuth();
 
-  if (loading)
-    return (
-      <div className="loading-container">
-        <h2>Verificando...</h2>
-      </div>
-    );
+  if (loading) return <Loading />;
 
   // Si hay sesión, inyectamos el Sidebar junto al contenido
   return session ? (
