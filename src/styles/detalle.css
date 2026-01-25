@@ -68,14 +68,15 @@
     grid-column: 1 / 2;
     grid-row: 1;
     font-size: 13px;
-    color: #94a3b8;
-    margin-bottom: 5px;
+    color: #94a3b8 !important;
+    margin-bottom: 10px;
   }
 
   /* 2. BOTÓN ELIMINAR: Fila 1, Columna 2 */
   .btn-delete-card {
     grid-column: 2 / 3;
     grid-row: 1;
+    margin-bottom: 10px !important;
   }
 
   /* 3. DESCRIPCIÓN: Fila 2, Columna 1 */
@@ -102,11 +103,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 5px;
   }
 
   /* Ajustes finales para los hijos del flex */
   .category {
-    font-size: 11px !important;
+    font-size: 12px !important;
     padding: 3px 10px !important;
     border-radius: 10px !important;
   }
