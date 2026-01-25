@@ -2,24 +2,39 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// COMPONENTES
 import Dashboard from "./components/Dashboard";
 import { Detalle } from "./components/Detalle";
+import { Papelera } from "./components/Papelera"; // Nueva
+import { Seguridad } from "./components/Seguridad"; // Nueva
 import Login from "./components/Login";
-import "./index.css";
+import { Sidebar } from "./components/Sidebar"; // El nuevo Sidebar
+import { Loading } from "./components/Loading";
 
+// ESTILOS
+import "./index.css";
+import "./styles/add_transaction.css";
+import "./styles/sidebar.css"; // Asegúrate de crear este CSS
+import "./styles/navbar.css";
+import "./styles/papelera.css";
+import "./styles/seguridad.css";
+
+// COMPONENTE DE RUTA PRIVADA
 const PrivateRoute = ({ children }) => {
   const { session, loading } = useAuth();
 
-  // Si está cargando la sesión, mostramos un estado neutro
-  if (loading)
-    return (
-      <div className="loading-container">
-        <h2>Verificando...</h2>
-      </div>
-    );
+  if (loading) return <Loading />;
 
-  // Si no hay sesión después de cargar, al login
-  return session ? children : <Navigate to="/login" />;
+  // Si hay sesión, inyectamos el Sidebar junto al contenido
+  return session ? (
+    <div className="app-layout">
+      <Sidebar />
+      <div className="main-content">{children}</div>
+    </div>
+  ) : (
+    <Navigate to="/login" />
+  );
 };
 
 createRoot(document.getElementById("root")).render(
@@ -27,7 +42,10 @@ createRoot(document.getElementById("root")).render(
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* RUTA PÚBLICA */}
           <Route path="/login" element={<Login />} />
+
+          {/* RUTAS PRIVADAS (Todas usan PrivateRoute + Sidebar) */}
           <Route
             path="/"
             element={
@@ -36,6 +54,7 @@ createRoot(document.getElementById("root")).render(
               </PrivateRoute>
             }
           />
+
           <Route
             path="/detalle"
             element={
@@ -44,7 +63,26 @@ createRoot(document.getElementById("root")).render(
               </PrivateRoute>
             }
           />
-          {/* Si escriben cualquier otra cosa, al inicio */}
+
+          <Route
+            path="/papelera"
+            element={
+              <PrivateRoute>
+                <Papelera />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/seguridad"
+            element={
+              <PrivateRoute>
+                <Seguridad />
+              </PrivateRoute>
+            }
+          />
+
+          {/* REDIRECCIÓN GLOBAL */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

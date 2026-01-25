@@ -19,15 +19,21 @@ import {
 import { Link as LinkIcon } from "lucide-react";
 import { Navbar } from "./Navbar";
 import { ResumenCards } from "./ResumenCards";
+import { Loading } from "./Loading";
 
-const COLORS = [
-  "#6366f1",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-];
+const CATEGORY_COLORS = {
+  Alimentos: "#bbd83a",
+  Transporte: "#F59E0B",
+  Hogar: "#EC4899",
+  Salud: "#1fce7c",
+  Ocio: "#8B5CF6",
+  Mascotas: "#0bc5e6",
+  Compras: "#a8dbdb",
+  Fijos: "#6366F1",
+  Otros: "#697fa193",
+  Ingreso: "#22C55E",
+};
+
 const NOMBRES_MESES = [
   "",
   "Enero",
@@ -63,6 +69,22 @@ export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const añoHoy = new Date().getFullYear();
+
+  const [privateStates, setPrivateStates] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem("privacySettings"));
+    return saved || { total: false, gasto: false, ingreso: false };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("privacySettings", JSON.stringify(privateStates));
+  }, [privateStates]);
+
+  const togglePrivacy = (key) => {
+    setPrivateStates((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   useEffect(() => {
     if (session?.user) {
@@ -110,6 +132,7 @@ export default function Dashboard() {
     const { data: gastos, error } = await supabase
       .from("gastos")
       .select("*")
+      .is("deleted_at", null) // Solo traemos los que NO están eliminados
       .order("created_at", { ascending: false });
 
     if (!error && gastos) {
@@ -175,32 +198,7 @@ export default function Dashboard() {
     } else alert("Error: " + error.message);
   }
 
-  if (loading)
-    return (
-      <div className="loading-container">
-        <h1>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={24}
-            height={24}
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            className="icon icon-tabler icons-tabler-outline icon-tabler-coins"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M9 14c0 1.657 2.686 3 6 3s6-1.343 6-3-2.686-3-6-3-6 1.343-6 3" />
-            <path d="M9 14v4c0 1.656 2.686 3 6 3s6-1.344 6-3v-4M3 6c0 1.072 1.144 2.062 3 2.598s4.144.536 6 0c1.856-.536 3-1.526 3-2.598 0-1.072-1.144-2.062-3-2.598s-4.144-.536-6 0C4.144 3.938 3 4.928 3 6" />
-            <path d="M3 6v10c0 .888.772 1.45 2 2" />
-            <path d="M3 11c0 .888.772 1.45 2 2" />
-          </svg>
-          FinanceTracker
-        </h1>
-        <h2>Cargando Perfil...</h2>
-      </div>
-    );
+  if (loading) return <Loading />;
 
   if (!telegramId)
     return (
@@ -227,17 +225,33 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar nickname={nickname} session={session} role={role} />
+      <Navbar />
       <div className="resumen-container">
         <ResumenCards
-          totalMes={(totalMesIngreso - totalMesGasto).toLocaleString("es-CL")}
-          gastoMes={totalMesGasto.toLocaleString("es-CL")}
-          ahorroMes={totalMesIngreso.toLocaleString("es-CL")}
+          // Lógica de visualización individual
+          totalMes={
+            privateStates.total
+              ? "********"
+              : (totalMesIngreso - totalMesGasto).toLocaleString("es-CL")
+          }
+          gastoMes={
+            privateStates.gasto
+              ? "********"
+              : totalMesGasto.toLocaleString("es-CL")
+          }
+          ahorroMes={
+            privateStates.ingreso
+              ? "********"
+              : totalMesIngreso.toLocaleString("es-CL")
+          }
+          // Props nuevas para los ojos
+          states={privateStates}
+          onToggle={togglePrivacy}
         />
 
         <div className="charts-grid">
           {/* Gráfico de Torta: Gastos por Categoría */}
-          <div className="chart-card">
+          <div className="chart-card cake">
             <div className="chart-header">
               <h2>Gastos por Categoría</h2>
               <p>Distribución mensual</p>
@@ -245,21 +259,42 @@ export default function Dashboard() {
             <div className="chart-content">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
+                  <defs>
+                    <pattern
+                      id="pattern-diagonal"
+                      width="4"
+                      height="4"
+                      patternUnits="userSpaceOnUse"
+                      patternTransform="rotate(45)"
+                    >
+                      <rect width="2" height="4" fill="#94A3B8" />{" "}
+                      {/* El color de "Otros" */}
+                    </pattern>
+                  </defs>
                   <Pie
                     data={dataTorta}
                     cx="50%" /* Centrado horizontal exacto */
                     cy="50%" /* Centrado vertical exacto */
-                    innerRadius={80} /* Radio interno */
+                    innerRadius={75} /* Radio interno */
                     outerRadius={110} /* Radio externo */
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {dataTorta.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
+                    {dataTorta.map((entry, index) => {
+                      const esOtros = entry.name === "Otros";
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          /* Mantenemos el patrón para la rebanada de la torta */
+                          fill={
+                            esOtros
+                              ? "url(#pattern-diagonal)"
+                              : CATEGORY_COLORS[entry.name] || "#ccc"
+                          }
+                          stroke={esOtros ? "#94A3B8" : "none"}
+                        />
+                      );
+                    })}
                   </Pie>
                   <Tooltip
                     /* Estilo del contenedor del cuadrito */
@@ -281,7 +316,39 @@ export default function Dashboard() {
                       `$${Number(value).toLocaleString("es-CL")}`
                     }
                   />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    align="center"
+                    layout="horizontal" // Asegura que se comporte como bloque horizontal
+                    wrapperStyle={{
+                      width: "100%",
+
+                      // Fuerza el ancho total para evitar desbordamiento lateral
+                      // Saca la leyenda del cálculo de posición absoluta del SVG
+                    }}
+                    formatter={(value) => {
+                      // Si la categoría es "Otros", forzamos el color gris de tu paleta
+                      const esOtros = value === "Otros";
+                      const colorTexto = esOtros
+                        ? "#94A3B8"
+                        : CATEGORY_COLORS[value] || "#94a3b8";
+
+                      return (
+                        <span
+                          className="legend-cake"
+                          style={{
+                            color: colorTexto,
+                            fontSize: "15px",
+                            fontWeight: esOtros ? "bold" : "normal",
+                            marginLeft: "2px",
+                          }}
+                        >
+                          {value}
+                        </span>
+                      );
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -360,7 +427,7 @@ export default function Dashboard() {
                   <BarChart
                     data={dataLineas}
                     layout="horizontal" /* Cambiamos a horizontal para barras verticales */
-                    margin={{ top: 15, right: 30, left: 0, bottom: 20 }}
+                    margin={{ top: 15, right: 30, left: 10, bottom: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -370,7 +437,7 @@ export default function Dashboard() {
                     <XAxis
                       dataKey="mesNombre"
                       stroke="#a6c0e5"
-                      fontSize={12}
+                      fontSize={11}
                       tickLine={false}
                       axisLine={false}
                       interval={0}
@@ -380,7 +447,7 @@ export default function Dashboard() {
                     />
                     <YAxis
                       stroke="#94a3b8"
-                      fontSize={12}
+                      fontSize={11}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(value) =>
@@ -427,32 +494,54 @@ export default function Dashboard() {
 
         <section className="tickets">
           <div className="tickets-header">
-            <h1 className="tituloGastos">Resumen Movimientos</h1>
+            <h1 className="tituloGastos">Últimos Movimientos</h1>
             <Link to="/detalle">
-              <button className="tickets-detalle">Ver Todo</button>
+              <button className="tickets-button btn-detalle">Detalle</button>
             </Link>
           </div>
           <div className="header">
             <h1>Fecha</h1>
             <h1>Descripcion</h1>
-            <h1>Categoria</h1>
+            <h1>Categoría</h1>
             <h1>Monto</h1>
           </div>
           <div className="ticket">
-            {gastosRaw.slice(0, 10).map((g, i) => (
-              <article className="ticket-card" key={g.id}>
-                <p className="fecha-registro">
-                  {g.created_at.replace("T", " ").slice(0, 16)}
-                </p>
-                <p>{g.description_ia_bot || "Sin descripción"}</p>
-                <h2 className="category">{g.category || "GENERAL"}</h2>
-                <span
-                  style={{ color: g.type === "gasto" ? "#ef4444" : "#36d35d" }}
-                >
-                  ${Number(g.amount || g.monto).toLocaleString("es-CL")}
-                </span>
-              </article>
-            ))}
+            {gastosRaw.slice(0, 10).map((g, i) => {
+              // Obtenemos el color dinámico. Si no existe, usamos un gris por defecto.
+              const categoriaColor = CATEGORY_COLORS[g.category] || "#94a3b8";
+
+              return (
+                <article className="ticket-card" key={g.id}>
+                  <p className="fecha-registro">
+                    {g.created_at.replace("T", " ").slice(0, 16)}
+                  </p>
+                  <p className="descripcion-texto">
+                    {g.description_user || "Sin descripción"}
+                  </p>
+
+                  {/* APLICACIÓN DE COLORES DINÁMICOS */}
+                  <h2
+                    className={`category ${g.category}`}
+                    style={{
+                      color: categoriaColor,
+                      borderColor: categoriaColor,
+                      opacity: 0.85,
+                      backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                    }}
+                  >
+                    {g.category || "GENERAL"}
+                  </h2>
+
+                  <span
+                    style={{
+                      color: g.type === "gasto" ? "#ef4444" : "#36d35d",
+                    }}
+                  >
+                    ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                  </span>
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>
