@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
@@ -6,7 +7,7 @@ const svgLogo = (
     xmlns="http://www.w3.org/2000/svg"
     width={24}
     height={24}
-    viewBox="0 0 24 24" // Agregado para que no se corte el dibujo
+    viewBox="0 0 24 24"
     fill="none"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -15,15 +16,11 @@ const svgLogo = (
   >
     <defs>
       <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6366F1" />{" "}
-        {/* Nota: stopColor con C mayúscula en React */}
+        <stop offset="0%" stopColor="#6366F1" />
         <stop offset="100%" stopColor="#06B6D4" />
       </linearGradient>
     </defs>
-
     <path stroke="none" d="M0 0h24v24H0z" />
-
-    {/* Cambiamos el color de línea a la URL del gradiente */}
     <g stroke="url(#logo-gradient)">
       <path d="M9 14c0 1.657 2.686 3 6 3s6-1.343 6-3-2.686-3-6-3-6 1.343-6 3" />
       <path d="M9 14v4c0 1.656 2.686 3 6 3s6-1.344 6-3v-4M3 6c0 1.072 1.144 2.062 3 2.598s4.144.536 6 0c1.856-.536 3-1.526 3-2.598 0-1.072-1.144-2.062-3-2.598s-4.144-.536-6 0C4.144 3.938 3 4.928 3 6" />
@@ -34,6 +31,18 @@ const svgLogo = (
 );
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
+  // BLOQUEO DE SCROLL: Evita que el fondo se mueva en móviles
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+
+    // Limpieza al desmontar para evitar que la web quede bloqueada
+    return () => document.body.classList.remove("no-scroll");
+  }, [isOpen]);
+
   return (
     <>
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
@@ -73,6 +82,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Resumen
             </h1>
           </NavLink>
+
           <NavLink to="/detalle" onClick={toggleSidebar}>
             <h1>
               <svg
@@ -94,6 +104,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Movimientos
             </h1>
           </NavLink>
+
           <NavLink to="/papelera" onClick={toggleSidebar}>
             <h1>
               <svg
@@ -113,6 +124,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Papelera
             </h1>
           </NavLink>
+
           <NavLink to="/seguridad" onClick={toggleSidebar}>
             <h1>
               <svg
@@ -129,7 +141,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             </h1>
           </NavLink>
 
-          {/* BOTÓN LOGOUT: Ahora dentro del menú */}
           <button
             className="btn-logout-sidebar"
             onClick={() => supabase.auth.signOut()}
@@ -139,7 +150,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
         </nav>
       </aside>
 
-      {/* Overlay para cerrar al tocar fuera */}
       {isOpen && (
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}

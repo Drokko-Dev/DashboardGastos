@@ -19,6 +19,7 @@ import "./styles/sidebar.css"; // Asegúrate de crear este CSS
 import "./styles/navbar.css";
 import "./styles/papelera.css";
 import "./styles/seguridad.css";
+import "./styles/detalle.css";
 
 // COMPONENTE DE RUTA PRIVADA
 const PrivateRoute = ({ children }) => {

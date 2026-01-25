@@ -68,6 +68,7 @@ export function Detalle() {
   const [selectedId, setSelectedId] = useState(null);
   //Estados para Editar datos
   const [editingGasto, setEditingGasto] = useState(null); // null = modal cerrado
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     if (session?.user) {
@@ -84,6 +85,12 @@ export function Detalle() {
       setCategoria("Otros");
     }
   }, [type]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   async function checkUserLink() {
     setLoading(true);
@@ -635,6 +642,12 @@ export function Detalle() {
                   >
                     {btnDeleteSVG}
                   </button>
+                  <button
+                    onClick={() => setEditingGasto(g)}
+                    className="btn-edit"
+                  >
+                    {btnEditeSVG}
+                  </button>
 
                   <p className="fecha-registro">
                     {g.created_at.replace("T", " ").slice(0, 16)}
@@ -644,34 +657,57 @@ export function Detalle() {
                   </p>
 
                   {/* APLICACIÓN DE COLORES DINÁMICOS */}
-                  <h2
-                    className={`category ${g.category}`}
-                    style={{
-                      color: `${categoriaColor}`,
-                      opacity: 0.85,
-                      borderColor: categoriaColor,
-                      backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                    }}
-                  >
-                    {g.category || "GENERAL"}
-                  </h2>
+                  {isMobile ? (
+                    <div className="monto-categoria">
+                      <h2
+                        className={`category ${g.category}`}
+                        style={{
+                          color: `${categoriaColor}`,
+                          opacity: 0.85,
+                          borderColor: categoriaColor,
+                          backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                        }}
+                      >
+                        {g.category || "GENERAL"}
+                      </h2>
 
-                  <span
-                    style={{
-                      color: g.type === "gasto" ? "#ef4444" : "#36d35d",
-                    }}
-                  >
-                    {" "}
-                    {g.type === "gasto"
-                      ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
-                      : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
-                  </span>
-                  <button
-                    onClick={() => setEditingGasto(g)}
-                    className="btn-edit"
-                  >
-                    {btnEditeSVG}
-                  </button>
+                      <span
+                        style={{
+                          color: g.type === "gasto" ? "#ef4444" : "#36d35d",
+                        }}
+                      >
+                        {" "}
+                        {g.type === "gasto"
+                          ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                          : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <h2
+                        className={`category ${g.category}`}
+                        style={{
+                          color: `${categoriaColor}`,
+                          opacity: 0.85,
+                          borderColor: categoriaColor,
+                          backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                        }}
+                      >
+                        {g.category || "GENERAL"}
+                      </h2>
+
+                      <span
+                        style={{
+                          color: g.type === "gasto" ? "#ef4444" : "#36d35d",
+                        }}
+                      >
+                        {" "}
+                        {g.type === "gasto"
+                          ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                          : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                      </span>
+                    </>
+                  )}
                 </article>
               );
             })}
