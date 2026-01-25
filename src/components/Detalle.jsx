@@ -30,6 +30,23 @@ const btnDeleteSVG = (
     <path d="m12 2 .324.001.318.004.616.017.299.013.579.034.553.046c4.785.464 6.732 2.411 7.196 7.196l.046.553.034.579c.005.098.01.198.013.299l.017.616L22 12l-.005.642-.017.616-.013.299-.034.579-.046.553c-.464 4.785-2.411 6.732-7.196 7.196l-.553.046-.579.034c-.098.005-.198.01-.299.013l-.616.017L12 22l-.642-.005-.616-.017-.299-.013-.579-.034-.553-.046c-4.785-.464-6.732-2.411-7.196-7.196l-.046-.553-.034-.579a28.058 28.058 0 0 1-.013-.299l-.017-.616C2.002 12.432 2 12.218 2 12l.001-.324.004-.318.017-.616.013-.299.034-.579.046-.553c.464-4.785 2.411-6.732 7.196-7.196l.553-.046.579-.034c.098-.005.198-.01.299-.013l.616-.017c.21-.003.424-.005.642-.005zm-1.489 7.14a1 1 0 0 0-1.218 1.567L10.585 12l-1.292 1.293-.083.094a1 1 0 0 0 1.497 1.32L12 13.415l1.293 1.292.094.083a1 1 0 0 0 1.32-1.497L13.415 12l1.292-1.293.083-.094a1 1 0 0 0-1.497-1.32L12 10.585l-1.293-1.292-.094-.083z" />
   </svg>
 );
+const btnEditeSVG = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-edit"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" />
+    <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+    <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3l8.385-8.415M16 5l3 3" />
+  </svg>
+);
 
 export function Detalle() {
   const { session } = useAuth(); // Obtenemos la sesión sin lógica extra
@@ -49,6 +66,8 @@ export function Detalle() {
   //Estados para Eliminar datos
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  //Estados para Editar datos
+  const [editingGasto, setEditingGasto] = useState(null); // null = modal cerrado
 
   useEffect(() => {
     if (session?.user) {
@@ -201,7 +220,7 @@ export function Detalle() {
     setShowDeleteModal(true);
   };
 
-  // Paso 2: Ejecutar la eliminación real
+  // Paso 2: Ejecutar el soft delete
   async function executeDelete() {
     try {
       const ahora = new Date();
@@ -225,6 +244,74 @@ export function Detalle() {
       }, 3000);
     } catch (err) {
       setToast({ show: true, message: "Error al procesar ❌", type: "error" });
+    }
+  }
+  // Ejecutar Actualizar
+  async function handleUpdate() {
+    // 1. Validación de descripción
+    if (!editingGasto.description_user.trim()) {
+      setToast({
+        show: true,
+        message: "⚠️ La descripción no puede estar vacía",
+        type: "error",
+      });
+      setTimeout(() => setToast({ show: false }), 3000);
+      return;
+    }
+
+    // 2. Validación de monto
+    const montoNumerico = Number(editingGasto.amount);
+    if (!editingGasto.amount || isNaN(montoNumerico) || montoNumerico === 0) {
+      setToast({
+        show: true,
+        message: "⚠️ Ingresa un monto válido",
+        type: "error",
+      });
+      setTimeout(() => setToast({ show: false }), 3000);
+      return;
+    }
+
+    // 3. Procesamiento de texto (Límite de 60 caracteres)
+    const descripcionFinal =
+      editingGasto.description_user.trim().length > 60
+        ? editingGasto.description_user.trim().substring(0, 57) + "..."
+        : editingGasto.description_user.trim();
+
+    try {
+      // 4. Actualización en Supabase
+      const { error } = await supabase
+        .from("gastos")
+        .update({
+          amount: montoNumerico,
+          description_user: descripcionFinal,
+          description_telegram: descripcionFinal,
+          category: editingGasto.category,
+        })
+        .eq("id", editingGasto.id);
+
+      if (error) throw error;
+
+      // 5. Feedback de éxito
+      setEditingGasto(null); // Cerramos el modal inmediatamente
+      setToast({
+        show: true,
+        message: "¡Movimiento actualizado! ✨",
+        type: "success",
+      });
+
+      fetchExpenses(); // Refrescamos los datos del Dashboard
+    } catch (err) {
+      console.error("Error al actualizar:", err);
+      setToast({
+        show: true,
+        message: "❌ Error: No se pudo actualizar el registro",
+        type: "error",
+      });
+    } finally {
+      // 6. Limpieza automática del Toast después de 3 segundos
+      setTimeout(() => {
+        setToast({ show: false, message: "", type: "" });
+      }, 3000);
     }
   }
 
@@ -408,6 +495,113 @@ export function Detalle() {
           </div>
         </div>
       )}
+      {/* MODAL para modificar */}
+      {editingGasto && (
+        <div className="modal-overlay">
+          <div
+            className={`modal-content ${editingGasto.type === "gasto" ? "gasto" : "ingreso"}`}
+          >
+            <div
+              className={`modal-title ${editingGasto.type === "gasto" ? "gasto" : "ingreso"}`}
+            >
+              <h2>Editar</h2>
+              <span>
+                {editingGasto.type === "ingreso" ? "Ingreso" : "Gasto"}
+              </span>
+            </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: "14px", color: "#94a3b8" }}>
+                Monto ($)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={Math.abs(editingGasto.amount)} // Mostramos valor absoluto para editar
+                onChange={(e) =>
+                  setEditingGasto({
+                    ...editingGasto,
+                    amount:
+                      editingGasto.amount < 0
+                        ? -Math.abs(e.target.value)
+                        : Math.abs(e.target.value),
+                  })
+                }
+              />
+            </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: "14px", color: "#94a3b8" }}>
+                Descripción
+              </label>
+              <textarea
+                className="input-description"
+                value={editingGasto.description_user}
+                onChange={(e) =>
+                  setEditingGasto({
+                    ...editingGasto,
+                    description_user: e.target.value,
+                  })
+                }
+                maxLength={60}
+                rows="2"
+                style={{ resize: "none" }}
+              />
+              <span
+                style={{
+                  fontSize: "10px",
+                  textAlign: "right",
+                  color: "#94a3b8",
+                }}
+              >
+                {editingGasto.description_user.length}/60
+              </span>
+            </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: "14px", color: "#94a3b8" }}>
+                Categoría
+              </label>
+              <select
+                value={editingGasto.category}
+                onChange={(e) =>
+                  setEditingGasto({ ...editingGasto, category: e.target.value })
+                }
+                disabled={editingGasto.category === "Ingreso"}
+                style={{
+                  opacity: editingGasto.category === "Ingreso" ? 0.6 : 1,
+                  backgroundColor:
+                    editingGasto.category === "Ingreso" ? "#1a1a1a" : "#2e2e2e",
+                }}
+              >
+                {editingGasto.category === "Ingreso" ? (
+                  <option value="Ingreso">Ingreso</option>
+                ) : (
+                  Object.keys(CATEGORY_COLORS)
+                    .filter((cat) => cat !== "Ingreso")
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))
+                )}
+              </select>
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: "20px" }}>
+              <button onClick={handleUpdate} className="btn-save">
+                Actualizar
+              </button>
+              <button
+                onClick={() => setEditingGasto(null)}
+                className="btn-cancel"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Navbar />
       <div className="resumen-container">
@@ -467,8 +661,17 @@ export function Detalle() {
                       color: g.type === "gasto" ? "#ef4444" : "#36d35d",
                     }}
                   >
-                    ${Number(g.amount || g.monto).toLocaleString("es-CL")}
+                    {" "}
+                    {g.type === "gasto"
+                      ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                      : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
                   </span>
+                  <button
+                    onClick={() => setEditingGasto(g)}
+                    className="btn-edit"
+                  >
+                    {btnEditeSVG}
+                  </button>
                 </article>
               );
             })}
