@@ -1,3 +1,12 @@
+.tickets-detalle {
+  border: none;
+}
+.fecha-subtotal-label.positivo {
+  color: rgb(54, 211, 93);
+}
+.fecha-subtotal-label.negativo {
+  color: rgb(239, 68, 68);
+}
 .ticketDetalle .ticket-card {
   position: relative;
   .btn-delete-card {
@@ -9,7 +18,7 @@
     color: #f87171; /* Un rojo un poco más claro para mejor contraste */
     padding: 6px;
     border-radius: 50%; /* Circular se ve más moderno para iconos solos */
-    border: 1px solid rgba(248, 113, 113, 0.2);
+    /* border: 1px solid rgba(248, 113, 113, 0.2); */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,6 +50,15 @@
 
     transform: scale(1.2);
   }
+}
+
+/*! nuevos estilos */
+
+.fecha-separador-header {
+  padding: 20px;
+  background-color: black;
+  display: flex;
+  gap: 20px;
 }
 
 @media (max-width: 768px) {

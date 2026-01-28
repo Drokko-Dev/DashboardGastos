@@ -70,6 +70,28 @@ export function Detalle() {
   const [editingGasto, setEditingGasto] = useState(null); // null = modal cerrado
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const agruparMovimientos = (movimientos) => {
+    return movimientos.reduce((grupos, mov) => {
+      // Formateamos la fecha
+      const fecha = new Date(mov.created_at).toLocaleDateString("es-CL", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!grupos[fecha]) {
+        grupos[fecha] = { items: [], subtotal: 0 };
+      }
+
+      grupos[fecha].items.push(mov);
+      // Calculamos el flujo neto del día
+      grupos[fecha].subtotal +=
+        mov.type === "ingreso" ? Number(mov.amount) : -Number(mov.amount);
+
+      return grupos;
+    }, {});
+  };
+
   useEffect(() => {
     if (session?.user) {
       checkUserLink();
@@ -612,7 +634,7 @@ export function Detalle() {
 
       {/* <Navbar /> */}
       <div className="resumen-container">
-        <section className="tickets">
+        <section className="tickets tickets-detalle">
           <div className="tickets-header">
             <h1 className="tituloGastos">Todos los Movimientos</h1>
             <div className="tickets-buttons">
@@ -629,88 +651,118 @@ export function Detalle() {
             <h1>Monto</h1>
           </div>
           <div className="ticketDetalle">
-            {gastosRaw.map((g, i) => {
-              // Obtenemos el color dinámico. Si no existe, usamos un gris por defecto.
-              const categoriaColor = CATEGORY_COLORS[g.category] || "#94a3b8";
-
-              return (
-                <article className="ticket-card" key={g.id}>
-                  <button
-                    onClick={() => confirmDelete(g.id)}
-                    className="btn-delete-card"
-                    title="Eliminar"
-                  >
-                    {btnDeleteSVG}
-                  </button>
-                  <button
-                    onClick={() => setEditingGasto(g)}
-                    className="btn-edit"
-                  >
-                    {btnEditeSVG}
-                  </button>
-
-                  <p className="fecha-registro">
-                    {g.created_at.replace("T", " ").slice(0, 16)}
-                  </p>
-                  <p className="descripcion-texto">
-                    {g.description_user || "Sin descripción"}
-                  </p>
-
-                  {/* APLICACIÓN DE COLORES DINÁMICOS */}
+            {Object.entries(agruparMovimientos(gastosRaw)).map(
+              ([fecha, data]) => (
+                <div key={fecha} className="grupo-dia-contenedor">
+                  {/* SEPARADOR DE FECHA TIPO BANCA */}
                   {isMobile ? (
-                    <div className="monto-categoria">
-                      <h2
-                        className={`category ${g.category}`}
-                        style={{
-                          color: `${categoriaColor}`,
-                          opacity: 0.85,
-                          borderColor: categoriaColor,
-                          backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                        }}
-                      >
-                        {g.category || "GENERAL"}
-                      </h2>
-
-                      <span
-                        style={{
-                          color: g.type === "gasto" ? "#ef4444" : "#36d35d",
-                        }}
-                      >
-                        {" "}
-                        {g.type === "gasto"
-                          ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
-                          : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
-                      </span>
+                    <div className="fecha-separador-header">
+                      <span className="fecha-texto-label">{fecha}</span>
                     </div>
                   ) : (
-                    <>
-                      <h2
-                        className={`category ${g.category}`}
-                        style={{
-                          color: `${categoriaColor}`,
-                          opacity: 0.85,
-                          borderColor: categoriaColor,
-                          backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                        }}
-                      >
-                        {g.category || "GENERAL"}
-                      </h2>
-
+                    <div className="fecha-separador-header">
+                      <span className="fecha-texto-label">{fecha}</span>
                       <span
-                        style={{
-                          color: g.type === "gasto" ? "#ef4444" : "#36d35d",
-                        }}
+                        className={`fecha-subtotal-label ${data.subtotal >= 0 ? "positivo" : "negativo"}`}
                       >
-                        {" "}
-                        {g.type === "gasto"
-                          ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
-                          : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                        {data.subtotal >= 0 ? "+" : "-"}$
+                        {Math.abs(data.subtotal).toLocaleString("es-CL")}
                       </span>
-                    </>
+                    </div>
                   )}
-                </article>
-              );
-            })}
+
+                  <div className="lista-items-dia">
+                    {data.items.map((g) => {
+                      const categoriaColor =
+                        CATEGORY_COLORS[g.category] || "#94a3b8";
+
+                      return (
+                        <article className="ticket-card" key={g.id}>
+                          {/* BOTONES DE ACCIÓN */}
+                          <button
+                            onClick={() => confirmDelete(g.id)}
+                            className="btn-delete-card"
+                            title="Eliminar"
+                          >
+                            {btnDeleteSVG}
+                          </button>
+                          <button
+                            onClick={() => setEditingGasto(g)}
+                            className="btn-edit"
+                          >
+                            {btnEditeSVG}
+                          </button>
+
+                          {/* HORA DEL REGISTRO */}
+                          <p className="fecha-registro">
+                            {g.created_at.split("T")[1].slice(0, 5)} hrs
+                          </p>
+
+                          <p className="descripcion-texto">
+                            {g.description_user || "Sin descripción"}
+                          </p>
+
+                          {/* APLICACIÓN DE COLORES DINÁMICOS */}
+                          {isMobile ? (
+                            <div className="monto-categoria">
+                              <h2
+                                className={`category ${g.category}`}
+                                style={{
+                                  color: `${categoriaColor}`,
+                                  opacity: 0.85,
+                                  borderColor: categoriaColor,
+                                  backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                                }}
+                              >
+                                {g.category || "GENERAL"}
+                              </h2>
+
+                              <span
+                                style={{
+                                  color:
+                                    g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                }}
+                              >
+                                {" "}
+                                {g.type === "gasto"
+                                  ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                                  : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                              </span>
+                            </div>
+                          ) : (
+                            <>
+                              <h2
+                                className={`category ${g.category}`}
+                                style={{
+                                  color: `${categoriaColor}`,
+                                  opacity: 0.85,
+                                  borderColor: categoriaColor,
+                                  backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                                }}
+                              >
+                                {g.category || "GENERAL"}
+                              </h2>
+
+                              <span
+                                style={{
+                                  color:
+                                    g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                }}
+                              >
+                                {" "}
+                                {g.type === "gasto"
+                                  ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                                  : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                              </span>
+                            </>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         </section>
       </div>
