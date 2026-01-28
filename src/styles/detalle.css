@@ -61,6 +61,35 @@
   gap: 20px;
 }
 
+.view-selector-bi {
+  display: flex;
+  background-color: #1a1a1a;
+  padding: 5px;
+  border-radius: 12px;
+  margin: 15px auto;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #2e2e2e;
+}
+
+.selector-pill {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.selector-pill.active {
+  background-color: #2e2e2e;
+  color: #08afbe; /* Tu color de marca */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 768px) {
   .tickets .ticketDetalle article {
     display: grid;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { Navbar } from "./Navbar";
 import { useAuth } from "../context/AuthContext"; // Usamos el contexto global
@@ -70,27 +70,54 @@ export function Detalle() {
   const [editingGasto, setEditingGasto] = useState(null); // null = modal cerrado
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const agruparMovimientos = (movimientos) => {
-    return movimientos.reduce((grupos, mov) => {
-      // Formateamos la fecha
+  // "mes" para vista calendario, "ciclo" para vista personalizada
+  const [vistaModo, setVistaModo] = useState("mes");
+
+  // 1. LÓGICA DE FILTRADO REACTIVA
+  const movimientosAMostrar = useMemo(() => {
+    if (vistaModo === "mes") {
+      const mesActual = new Date().getMonth() + 1;
+      const anioActual = new Date().getFullYear();
+      return gastosRaw.filter(
+        (g) => g.month === mesActual && g.year === anioActual,
+      );
+    } else {
+      // 1. Buscamos el sueldo que marca el inicio del ciclo
+      const ultimoSueldo = gastosRaw.find(
+        (g) =>
+          g.type === "ingreso" &&
+          g.description_user?.toLowerCase().includes("sueldo") &&
+          g.category === "Ingreso",
+      );
+
+      if (!ultimoSueldo) return gastosRaw;
+
+      // 2. FILTRO MEJORADO: Traemos todo lo que sea posterior O sea el mismo ID del sueldo
+      return gastosRaw.filter(
+        (g) =>
+          new Date(g.created_at) > new Date(ultimoSueldo.created_at) ||
+          g.id === ultimoSueldo.id,
+      );
+    }
+  }, [gastosRaw, vistaModo]);
+
+  // 2. LÓGICA DE AGRUPAMIENTO REACTIVA
+  const grupos = useMemo(() => {
+    return movimientosAMostrar.reduce((grupos, mov) => {
       const fecha = new Date(mov.created_at).toLocaleDateString("es-CL", {
         day: "numeric",
         month: "long",
         year: "numeric",
       });
-
       if (!grupos[fecha]) {
         grupos[fecha] = { items: [], subtotal: 0 };
       }
-
       grupos[fecha].items.push(mov);
-      // Calculamos el flujo neto del día
-      grupos[fecha].subtotal +=
-        mov.type === "ingreso" ? Number(mov.amount) : -Number(mov.amount);
-
+      const montoNum = Number(mov.amount || 0);
+      grupos[fecha].subtotal += mov.type === "ingreso" ? montoNum : -montoNum;
       return grupos;
     }, {});
-  };
+  }, [movimientosAMostrar]);
 
   useEffect(() => {
     if (session?.user) {
@@ -634,6 +661,20 @@ export function Detalle() {
 
       {/* <Navbar /> */}
       <div className="resumen-container">
+        <div className="view-selector-bi">
+          <button
+            className={`selector-pill ${vistaModo === "mes" ? "active" : ""}`}
+            onClick={() => setVistaModo("mes")}
+          >
+            Mes Actual
+          </button>
+          <button
+            className={`selector-pill ${vistaModo === "ciclo" ? "active" : ""}`}
+            onClick={() => setVistaModo("ciclo")}
+          >
+            Ciclo Activo
+          </button>
+        </div>
         <section className="tickets tickets-detalle">
           <div className="tickets-header">
             <h1 className="tituloGastos">Todos los Movimientos</h1>
@@ -651,118 +692,116 @@ export function Detalle() {
             <h1>Monto</h1>
           </div>
           <div className="ticketDetalle">
-            {Object.entries(agruparMovimientos(gastosRaw)).map(
-              ([fecha, data]) => (
-                <div key={fecha} className="grupo-dia-contenedor">
-                  {/* SEPARADOR DE FECHA TIPO BANCA */}
-                  {isMobile ? (
-                    <div className="fecha-separador-header">
-                      <span className="fecha-texto-label">{fecha}</span>
-                    </div>
-                  ) : (
-                    <div className="fecha-separador-header">
-                      <span className="fecha-texto-label">{fecha}</span>
-                      <span
-                        className={`fecha-subtotal-label ${data.subtotal >= 0 ? "positivo" : "negativo"}`}
-                      >
-                        {data.subtotal >= 0 ? "+" : "-"}$
-                        {Math.abs(data.subtotal).toLocaleString("es-CL")}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="lista-items-dia">
-                    {data.items.map((g) => {
-                      const categoriaColor =
-                        CATEGORY_COLORS[g.category] || "#94a3b8";
-
-                      return (
-                        <article className="ticket-card" key={g.id}>
-                          {/* BOTONES DE ACCIÓN */}
-                          <button
-                            onClick={() => confirmDelete(g.id)}
-                            className="btn-delete-card"
-                            title="Eliminar"
-                          >
-                            {btnDeleteSVG}
-                          </button>
-                          <button
-                            onClick={() => setEditingGasto(g)}
-                            className="btn-edit"
-                          >
-                            {btnEditeSVG}
-                          </button>
-
-                          {/* HORA DEL REGISTRO */}
-                          <p className="fecha-registro">
-                            {g.created_at.split("T")[1].slice(0, 5)} hrs
-                          </p>
-
-                          <p className="descripcion-texto">
-                            {g.description_user || "Sin descripción"}
-                          </p>
-
-                          {/* APLICACIÓN DE COLORES DINÁMICOS */}
-                          {isMobile ? (
-                            <div className="monto-categoria">
-                              <h2
-                                className={`category ${g.category}`}
-                                style={{
-                                  color: `${categoriaColor}`,
-                                  opacity: 0.85,
-                                  borderColor: categoriaColor,
-                                  backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                                }}
-                              >
-                                {g.category || "GENERAL"}
-                              </h2>
-
-                              <span
-                                style={{
-                                  color:
-                                    g.type === "gasto" ? "#ef4444" : "#36d35d",
-                                }}
-                              >
-                                {" "}
-                                {g.type === "gasto"
-                                  ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
-                                  : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
-                              </span>
-                            </div>
-                          ) : (
-                            <>
-                              <h2
-                                className={`category ${g.category}`}
-                                style={{
-                                  color: `${categoriaColor}`,
-                                  opacity: 0.85,
-                                  borderColor: categoriaColor,
-                                  backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                                }}
-                              >
-                                {g.category || "GENERAL"}
-                              </h2>
-
-                              <span
-                                style={{
-                                  color:
-                                    g.type === "gasto" ? "#ef4444" : "#36d35d",
-                                }}
-                              >
-                                {" "}
-                                {g.type === "gasto"
-                                  ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
-                                  : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
-                              </span>
-                            </>
-                          )}
-                        </article>
-                      );
-                    })}
+            {Object.entries(grupos).map(([fecha, data]) => (
+              <div key={fecha} className="grupo-dia-contenedor">
+                {/* SEPARADOR DE FECHA TIPO BANCA */}
+                {isMobile ? (
+                  <div className="fecha-separador-header">
+                    <span className="fecha-texto-label">{fecha}</span>
                   </div>
+                ) : (
+                  <div className="fecha-separador-header">
+                    <span className="fecha-texto-label">{fecha}</span>
+                    <span
+                      className={`fecha-subtotal-label ${data.subtotal >= 0 ? "positivo" : "negativo"}`}
+                    >
+                      {data.subtotal >= 0 ? "+" : "-"}$
+                      {Math.abs(data.subtotal).toLocaleString("es-CL")}
+                    </span>
+                  </div>
+                )}
+
+                <div className="lista-items-dia">
+                  {data.items.map((g) => {
+                    const categoriaColor =
+                      CATEGORY_COLORS[g.category] || "#94a3b8";
+
+                    return (
+                      <article className="ticket-card" key={g.id}>
+                        {/* BOTONES DE ACCIÓN */}
+                        <button
+                          onClick={() => confirmDelete(g.id)}
+                          className="btn-delete-card"
+                          title="Eliminar"
+                        >
+                          {btnDeleteSVG}
+                        </button>
+                        <button
+                          onClick={() => setEditingGasto(g)}
+                          className="btn-edit"
+                        >
+                          {btnEditeSVG}
+                        </button>
+
+                        {/* HORA DEL REGISTRO */}
+                        <p className="fecha-registro">
+                          {g.created_at.split("T")[1].slice(0, 5)} hrs
+                        </p>
+
+                        <p className="descripcion-texto">
+                          {g.description_user || "Sin descripción"}
+                        </p>
+
+                        {/* APLICACIÓN DE COLORES DINÁMICOS */}
+                        {isMobile ? (
+                          <div className="monto-categoria">
+                            <h2
+                              className={`category ${g.category}`}
+                              style={{
+                                color: `${categoriaColor}`,
+                                opacity: 0.85,
+                                borderColor: categoriaColor,
+                                backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                              }}
+                            >
+                              {g.category || "GENERAL"}
+                            </h2>
+
+                            <span
+                              style={{
+                                color:
+                                  g.type === "gasto" ? "#ef4444" : "#36d35d",
+                              }}
+                            >
+                              {" "}
+                              {g.type === "gasto"
+                                ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                                : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <h2
+                              className={`category ${g.category}`}
+                              style={{
+                                color: `${categoriaColor}`,
+                                opacity: 0.85,
+                                borderColor: categoriaColor,
+                                backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                              }}
+                            >
+                              {g.category || "GENERAL"}
+                            </h2>
+
+                            <span
+                              style={{
+                                color:
+                                  g.type === "gasto" ? "#ef4444" : "#36d35d",
+                              }}
+                            >
+                              {" "}
+                              {g.type === "gasto"
+                                ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
+                                : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
+                            </span>
+                          </>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
-              ),
-            )}
+              </div>
+            ))}
           </div>
         </section>
       </div>
