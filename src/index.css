@@ -632,7 +632,15 @@ text {
   }
 
   .legend-cake {
-    font-size: 13px !important;
+    font-size: 12px !important;
+  }
+  .recharts-default-legend {
+    padding: 0px !important;
+    margin: 0px !important;
+    width: 240px !important;
+  }
+  .recharts-legend-item {
+    margin-right: 8px !important;
   }
   .tituloGastos {
     font-size: 17px !important;

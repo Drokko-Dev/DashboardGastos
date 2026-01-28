@@ -610,7 +610,7 @@ export function Detalle() {
         </div>
       )}
 
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="resumen-container">
         <section className="tickets">
           <div className="tickets-header">

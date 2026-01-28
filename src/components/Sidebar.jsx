@@ -1,7 +1,36 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
+const settings = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="currentColor"
+    className="icon icon-tabler icons-tabler-filled icon-tabler-adjustments"
+  >
+    <path fill="none" d="M0 0h24v24H0z" />
+    <path d="M6 3a1 1 0 0 1 .993.883L7 4v3.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L5 20v-7.17a3.002 3.002 0 0 1-1.995-2.654L3 10l.005-.176A3.002 3.002 0 0 1 5 7.17V4a1 1 0 0 1 1-1zM12 3a1 1 0 0 1 .993.883L13 4v9.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L11 20v-1.17a3.002 3.002 0 0 1-1.995-2.654L9 16l.005-.176A3.002 3.002 0 0 1 11 13.17V4a1 1 0 0 1 1-1zM18 3a1 1 0 0 1 .993.883L19 4v.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L17 20V9.83a3.002 3.002 0 0 1-1.995-2.654L15 7l.005-.176A3.002 3.002 0 0 1 17 4.17V4a1 1 0 0 1 1-1z" />
+  </svg>
+);
+const LogOut = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-door-exit"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" />
+    <path d="M13 12v.01M3 21h18M5 21V5a2 2 0 0 1 2-2h7.5M17 13.5V21M14 7h7m-3-3 3 3-3 3" />
+  </svg>
+);
 const svgLogo = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -31,6 +60,8 @@ const svgLogo = (
 );
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const { session, nickname, role } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   // BLOQUEO DE SCROLL: Evita que el fondo se mueva en móviles
   useEffect(() => {
     if (isOpen) {
@@ -67,7 +98,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/" end onClick={toggleSidebar}>
+          <NavLink
+            to="/"
+            end
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +119,11 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             </h1>
           </NavLink>
 
-          <NavLink to="/detalle" onClick={toggleSidebar}>
+          <NavLink
+            to="/detalle"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -105,7 +145,11 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             </h1>
           </NavLink>
 
-          <NavLink to="/papelera" onClick={toggleSidebar}>
+          <NavLink
+            to="/papelera"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +169,11 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             </h1>
           </NavLink>
 
-          <NavLink to="/seguridad" onClick={toggleSidebar}>
+          <NavLink
+            to="/seguridad"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -140,13 +188,62 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Seguridad
             </h1>
           </NavLink>
+          {/* SECCIÓN DE PERFIL */}
+          <div className="sidebar-profile-wrapper">
+            <div
+              className="sidebar-user-card"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <img className="sidebar-avatar" src="/banana.png" alt="Avatar" />
+              <div className="sidebar-user-info">
+                <div>
+                  <span className="sidebar-nickname">
+                    {nickname || "Usuario"}
+                  </span>
+                  {role === "admin" && (
+                    <span className="admin-badge">{role}</span>
+                  )}
+                </div>
+                <span className="sidebar-email">{session?.user?.email}</span>
+              </div>
+              <svg
+                className={`sidebar-chevron ${showProfileMenu ? "rotated" : ""}`}
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
 
-          <button
+            {showProfileMenu && (
+              <div className="sidebar-profile-dropdown">
+                <NavLink
+                  to="/seguridad"
+                  onClick={toggleSidebar}
+                  className="dropdown-item item-conf"
+                >
+                  <span>{settings}Configuración Perfil</span>
+                </NavLink>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="dropdown-item logout-btn"
+                >
+                  {LogOut} Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/*  <button
             className="btn-logout-sidebar"
             onClick={() => supabase.auth.signOut()}
           >
             Salir 🚪
-          </button>
+          </button> */}
         </nav>
       </aside>
 

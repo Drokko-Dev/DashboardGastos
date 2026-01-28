@@ -59,7 +59,7 @@ export function Papelera() {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="papelera-page">
         <header className="papelera-header">
           <h1>

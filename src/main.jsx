@@ -20,6 +20,7 @@ import "./styles/navbar.css";
 import "./styles/papelera.css";
 import "./styles/seguridad.css";
 import "./styles/detalle.css";
+import { Navbar } from "./components/Navbar";
 
 // COMPONENTE DE RUTA PRIVADA
 const PrivateRoute = ({ children }) => {
@@ -27,12 +28,18 @@ const PrivateRoute = ({ children }) => {
 
   if (loading) return <Loading />;
 
-  // Si hay sesión, inyectamos el Sidebar junto al contenido
   return session ? (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">{children}</div>
-    </div>
+    <>
+      {" "}
+      <Navbar />
+      <div className="app-layout">
+        {/* El Navbar queda arriba de todo o dentro del contenido, según tu diseño */}
+        {/* <Sidebar /> */}
+
+        {/* <--- LO LLAMAS AQUÍ UNA SOLA VEZ */}
+        <div className="main-content">{children}</div>
+      </div>
+    </>
   ) : (
     <Navigate to="/login" />
   );
