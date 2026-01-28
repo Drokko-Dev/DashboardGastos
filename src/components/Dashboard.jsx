@@ -225,7 +225,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="resumen-container">
         <ResumenCards
           // Lógica de visualización individual

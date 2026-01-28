@@ -5,7 +5,7 @@ import { Navbar } from "./Navbar";
 export function Seguridad() {
   return (
     <>
-      <Navbar />
+      {/*  <Navbar /> */}
       <div className="seguridad-container">
         <header className="seguridad-header">
           <div className="icon-shield">🛡️</div>

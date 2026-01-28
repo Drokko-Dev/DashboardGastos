@@ -1,12 +1,42 @@
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
+const settings = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="currentColor"
+    className="icon icon-tabler icons-tabler-filled icon-tabler-adjustments"
+  >
+    <path fill="none" d="M0 0h24v24H0z" />
+    <path d="M6 3a1 1 0 0 1 .993.883L7 4v3.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L5 20v-7.17a3.002 3.002 0 0 1-1.995-2.654L3 10l.005-.176A3.002 3.002 0 0 1 5 7.17V4a1 1 0 0 1 1-1zM12 3a1 1 0 0 1 .993.883L13 4v9.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L11 20v-1.17a3.002 3.002 0 0 1-1.995-2.654L9 16l.005-.176A3.002 3.002 0 0 1 11 13.17V4a1 1 0 0 1 1-1zM18 3a1 1 0 0 1 .993.883L19 4v.171a3.001 3.001 0 0 1 0 5.658V20a1 1 0 0 1-1.993.117L17 20V9.83a3.002 3.002 0 0 1-1.995-2.654L15 7l.005-.176A3.002 3.002 0 0 1 17 4.17V4a1 1 0 0 1 1-1z" />
+  </svg>
+);
+const LogOut = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-door-exit"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" />
+    <path d="M13 12v.01M3 21h18M5 21V5a2 2 0 0 1 2-2h7.5M17 13.5V21M14 7h7m-3-3 3 3-3 3" />
+  </svg>
+);
 const svgLogo = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={24}
     height={24}
-    viewBox="0 0 24 24" // Agregado para que no se corte el dibujo
+    viewBox="0 0 24 24"
     fill="none"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -15,15 +45,11 @@ const svgLogo = (
   >
     <defs>
       <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6366F1" />{" "}
-        {/* Nota: stopColor con C mayúscula en React */}
+        <stop offset="0%" stopColor="#6366F1" />
         <stop offset="100%" stopColor="#06B6D4" />
       </linearGradient>
     </defs>
-
     <path stroke="none" d="M0 0h24v24H0z" />
-
-    {/* Cambiamos el color de línea a la URL del gradiente */}
     <g stroke="url(#logo-gradient)">
       <path d="M9 14c0 1.657 2.686 3 6 3s6-1.343 6-3-2.686-3-6-3-6 1.343-6 3" />
       <path d="M9 14v4c0 1.656 2.686 3 6 3s6-1.344 6-3v-4M3 6c0 1.072 1.144 2.062 3 2.598s4.144.536 6 0c1.856-.536 3-1.526 3-2.598 0-1.072-1.144-2.062-3-2.598s-4.144-.536-6 0C4.144 3.938 3 4.928 3 6" />
@@ -34,6 +60,20 @@ const svgLogo = (
 );
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const { session, nickname, role } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  // BLOQUEO DE SCROLL: Evita que el fondo se mueva en móviles
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+
+    // Limpieza al desmontar para evitar que la web quede bloqueada
+    return () => document.body.classList.remove("no-scroll");
+  }, [isOpen]);
+
   return (
     <>
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
@@ -58,7 +98,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/" end onClick={toggleSidebar}>
+          <NavLink
+            to="/"
+            end
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -73,7 +118,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Resumen
             </h1>
           </NavLink>
-          <NavLink to="/detalle" onClick={toggleSidebar}>
+
+          <NavLink
+            to="/detalle"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +144,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Movimientos
             </h1>
           </NavLink>
-          <NavLink to="/papelera" onClick={toggleSidebar}>
+
+          <NavLink
+            to="/papelera"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -113,7 +168,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Papelera
             </h1>
           </NavLink>
-          <NavLink to="/seguridad" onClick={toggleSidebar}>
+
+          <NavLink
+            to="/seguridad"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
             <h1>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -128,18 +188,65 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Seguridad
             </h1>
           </NavLink>
+          {/* SECCIÓN DE PERFIL */}
+          <div className="sidebar-profile-wrapper">
+            <div
+              className="sidebar-user-card"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <img className="sidebar-avatar" src="/banana.png" alt="Avatar" />
+              <div className="sidebar-user-info">
+                <div>
+                  <span className="sidebar-nickname">
+                    {nickname || "Usuario"}
+                  </span>
+                  {role === "admin" && (
+                    <span className="admin-badge">{role}</span>
+                  )}
+                </div>
+                <span className="sidebar-email">{session?.user?.email}</span>
+              </div>
+              <svg
+                className={`sidebar-chevron ${showProfileMenu ? "rotated" : ""}`}
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
 
-          {/* BOTÓN LOGOUT: Ahora dentro del menú */}
-          <button
+            {showProfileMenu && (
+              <div className="sidebar-profile-dropdown">
+                <NavLink
+                  to="/seguridad"
+                  onClick={toggleSidebar}
+                  className="dropdown-item item-conf"
+                >
+                  <span>{settings}Configuración Perfil</span>
+                </NavLink>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="dropdown-item logout-btn"
+                >
+                  {LogOut} Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/*  <button
             className="btn-logout-sidebar"
             onClick={() => supabase.auth.signOut()}
           >
             Salir 🚪
-          </button>
+          </button> */}
         </nav>
       </aside>
 
-      {/* Overlay para cerrar al tocar fuera */}
       {isOpen && (
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}
