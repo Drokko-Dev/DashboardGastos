@@ -72,6 +72,7 @@ export function Detalle() {
 
   // "mes" para vista calendario, "ciclo" para vista personalizada
   const [vistaModo, setVistaModo] = useState("mes");
+  const [reiniciarCiclo, setReiniciarCiclo] = useState(false); // NUEVO ESTADO
 
   // 1. LÓGICA DE FILTRADO REACTIVA
   const movimientosAMostrar = useMemo(() => {
@@ -132,6 +133,13 @@ export function Detalle() {
     } else if (type === "gasto" && categoria === "Ingreso") {
       // Si vuelve a gasto, lo reseteamos a Otros para evitar errores
       setCategoria("Otros");
+    }
+  }, [type]);
+
+  useEffect(() => {
+    // Si el tipo cambia a gasto, forzamos que el switch se apague
+    if (type === "gasto") {
+      setReiniciarCiclo(false);
     }
   }, [type]);
 
@@ -201,34 +209,70 @@ export function Detalle() {
       return;
     }
 
-    // Obtenemos id_telegram del perfil cargado previamente
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id_telegram")
-      .eq("auth_id", session.user.id)
-      .single();
-
-    const ahora = new Date();
-
-    // Extraemos los datos según la hora local del usuario
-    const dia = ahora.getDate();
-    const mes = ahora.getMonth() + 1; // Enero es 0
-    const anio = ahora.getFullYear();
-    // Formato YYYY-MM-DD para la columna 'date'
-    const fechaLocal = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-
-    // Formato para created_at (incluyendo la hora local)
-    const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
-    // 'sv-SE' genera YYYY-MM-DD HH:mm:ss que es compatible con Supabase
-    const descripcionFinal =
-      descripcion.trim().length > 60
-        ? descripcion.trim().substring(0, 57) + "..."
-        : descripcion.trim();
     try {
+      // Obtenemos id_telegram del perfil cargado previamente
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id_telegram, current_cycle_id")
+        .eq("auth_id", session.user.id)
+        .single();
+
+      const ahora = new Date();
+
+      // Extraemos los datos según la hora local del usuario
+      const dia = ahora.getDate();
+      const mes = ahora.getMonth() + 1; // Enero es 0
+      const anio = ahora.getFullYear();
+      // Formato YYYY-MM-DD para la columna 'date'
+      const fechaLocal = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+
+      // Formato para created_at (incluyendo la hora local)
+      const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
+      // 'sv-SE' genera YYYY-MM-DD HH:mm:ss que es compatible con Supabase
+      const descripcionFinal =
+        descripcion.trim().length > 60
+          ? descripcion.trim().substring(0, 57) + "..."
+          : descripcion.trim();
+
+      let nuevoCicloId = profile.current_cycle_id;
+      // --- LÓGICA DE REINICIO DE CICLO ---
+      if (type === "ingreso" && reiniciarCiclo) {
+        // A. Cerrar ciclo actual
+        await supabase
+          .from("ciclos")
+          .update({ estado: false, fecha_fin: createdAtLocal })
+          .eq("id", profile.current_cycle_id);
+
+        // B. Crear nuevo ciclo
+        // Primero contamos cuántos ciclos tiene el usuario para el número correlativo
+
+        const { data: cicloNuevo, error: errorCiclo } = await supabase
+          .from("ciclos")
+          .insert([
+            {
+              id_telegram: profile.id_telegram,
+              nombre: descripcionFinal,
+              estado: true,
+              monto_inicial: montoNumerico,
+              fecha_inicio: createdAtLocal,
+            },
+          ])
+          .select()
+          .single();
+
+        if (errorCiclo) throw errorCiclo;
+        nuevoCicloId = cicloNuevo.id;
+
+        // C. Actualizar el ID del ciclo actual en el Perfil
+        await supabase
+          .from("profiles")
+          .update({ current_cycle_id: nuevoCicloId })
+          .eq("id_telegram", profile.id_telegram);
+      }
       const { error } = await supabase.from("gastos").insert([
         {
           origin: "web",
-          amount: Number(monto),
+          amount: montoNumerico,
           description_user: descripcionFinal, // Lo que escribes en el modal
           description_telegram: descripcionFinal,
           category: categoria,
@@ -241,6 +285,8 @@ export function Detalle() {
           month: mes,
           year: anio,
           created_at: createdAtLocal,
+          ciclo_id: nuevoCicloId,
+          is_sueldo: reiniciarCiclo,
         },
       ]);
 
@@ -255,6 +301,7 @@ export function Detalle() {
       // Limpiamos estados
       setMonto("");
       setDescripcion("");
+      setReiniciarCiclo(false);
       setType(null);
       fetchExpenses(); // Refresca la tabla automáticamente
 
@@ -456,6 +503,39 @@ export function Detalle() {
                 {descripcion.length}/60
               </span>
             </div>
+            {type === "ingreso" && (
+              <div
+                className="switch-container"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  margin: "10px 0",
+                  padding: "10px",
+                  background: "#1a1a1a",
+                  borderRadius: "8px",
+                }}
+              >
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={reiniciarCiclo}
+                    onChange={(e) => setReiniciarCiclo(e.target.checked)}
+                  />
+                  <span className="slider round"></span>
+                </label>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: reiniciarCiclo ? "#36d35d" : "#94a3b8",
+                  }}
+                >
+                  {reiniciarCiclo
+                    ? "🚀 Iniciar Nuevo Ciclo"
+                    : "¿Cerrar ciclo con este ingreso?"}
+                </span>
+              </div>
+            )}
             <div className="input-group">
               <label>Categoría</label>
               <select
