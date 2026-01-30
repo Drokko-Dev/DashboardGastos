@@ -7,6 +7,21 @@
 .fecha-subtotal-label.negativo {
   color: rgb(239, 68, 68);
 }
+
+/* Estilo para ocultar montos de forma elegante */
+.monto-blurred {
+  filter: blur(6px); /* El desenfoque */
+  opacity: 0.5;
+  user-select: none; /* Evita que se pueda seleccionar/copiar el valor oculto */
+  pointer-events: none; /* Evita interacciones accidentales */
+}
+
+/* Opcional: un efecto hover sutil para que el usuario sepa que está oculto */
+.monto-blurred:hover {
+  filter: blur(4px);
+  opacity: 0.7;
+}
+
 .ticketDetalle .ticket-card {
   position: relative;
   .btn-delete-card {

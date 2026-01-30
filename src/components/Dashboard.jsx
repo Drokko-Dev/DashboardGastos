@@ -50,7 +50,15 @@ const NOMBRES_MESES = [
 
 export default function Dashboard() {
   // 1. CONSUMO DEL CONTEXTO GLOBAL
-  const { session, idTelegram, nickname, gastosRaw, loadingGastos } = useAuth();
+  const {
+    session,
+    idTelegram,
+    nickname,
+    gastosRaw,
+    loadingGastos,
+    states,
+    togglePrivacy,
+  } = useAuth();
 
   // Estados de UI
   const [dataTorta, setDataTorta] = useState([]);
@@ -60,18 +68,18 @@ export default function Dashboard() {
   const añoHoy = new Date().getFullYear();
 
   // Configuración de privacidad
-  const [privateStates, setPrivateStates] = useState(() => {
+  /*  const [privateStates, setPrivateStates] = useState(() => {
     const saved = JSON.parse(localStorage.getItem("privacySettings"));
     return saved || { total: false, gasto: false, ingreso: false };
   });
-
-  useEffect(() => {
+ */
+  /*   useEffect(() => {
     localStorage.setItem("privacySettings", JSON.stringify(privateStates));
-  }, [privateStates]);
+  }, [privateStates]); */
 
-  const togglePrivacy = (key) => {
+  /*  const togglePrivacy = (key) => {
     setPrivateStates((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  }; */
 
   // 2. PROCESAMIENTO DE DATOS PARA GRÁFICOS
   useEffect(() => {
@@ -157,24 +165,12 @@ export default function Dashboard() {
       {/* <Navbar /> */}
       <div className="resumen-container">
         <ResumenCards
-          // Lógica de visualización individual
-          totalMes={
-            privateStates.total
-              ? "********"
-              : (totalMesIngreso - totalMesGasto).toLocaleString("es-CL")
-          }
-          gastoMes={
-            privateStates.gasto
-              ? "********"
-              : totalMesGasto.toLocaleString("es-CL")
-          }
-          ahorroMes={
-            privateStates.ingreso
-              ? "********"
-              : totalMesIngreso.toLocaleString("es-CL")
-          }
-          // Props nuevas para los ojos
-          states={privateStates}
+          // Pasamos los valores numéricos puros (Sin formatear aquí)
+          totalMes={totalMesIngreso - totalMesGasto}
+          gastoMes={totalMesGasto}
+          ahorroMes={totalMesIngreso}
+          // Usamos los nombres que vienen del AuthContext
+          states={states}
           onToggle={togglePrivacy}
         />
 

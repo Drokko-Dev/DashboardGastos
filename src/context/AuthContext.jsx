@@ -7,6 +7,12 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   /* const [vistaModo, setVistaModo] = useState("mes"); */
+  const [states, setStates] = useState(() => {
+    const saved = localStorage.getItem("privacySettings");
+    return saved
+      ? JSON.parse(saved)
+      : { total: false, gasto: false, ingreso: false };
+  });
   // ESTADOS GLOBALES DE PERFIL
   const [nickname, setNickname] = useState("");
   const [role, setRole] = useState("");
@@ -19,6 +25,13 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
   const [loadingGastos, setLoadingGastos] = useState(false);
+
+  // Función para cambiar el estado (el "ojo")
+  const togglePrivacy = (key) => {
+    const newStates = { ...states, [key]: !states[key] };
+    setStates(newStates);
+    localStorage.setItem("privacySettings", JSON.stringify(newStates));
+  };
 
   // 1. FUNCIÓN PARA CARGAR GASTOS (Disponible para toda la app)
   const refreshGastos = async () => {
@@ -113,6 +126,8 @@ export const AuthProvider = ({ children }) => {
         gastosRaw,
         loadingGastos,
         refreshGastos,
+        states,
+        togglePrivacy,
         /* vistaModo,
         setVistaModo, */
       }}

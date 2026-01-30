@@ -57,6 +57,7 @@ export function Detalle() {
     gastosRaw,
     refreshGastos,
     loadingGastos,
+    states = {},
   } = useAuth();
 
   // Estados locales de UI
@@ -756,6 +757,9 @@ export function Detalle() {
 
                 <div className="lista-items-dia">
                   {data.items.map((g) => {
+                    const isHidden =
+                      (g.type === "ingreso" && states?.ingreso) ||
+                      (g.type === "gasto" && states?.gasto);
                     const categoriaColor =
                       CATEGORY_COLORS[g.category] || "#94a3b8";
 
@@ -827,12 +831,13 @@ export function Detalle() {
                             </h2>
 
                             <span
+                              className={isHidden ? "monto-blurred" : ""}
                               style={{
                                 color:
                                   g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                transition: "all 0.3s ease", // Transición suave para el efecto premium
                               }}
                             >
-                              {" "}
                               {g.type === "gasto"
                                 ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
                                 : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
