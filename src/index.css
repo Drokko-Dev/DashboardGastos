@@ -5,6 +5,14 @@
   --color-brand-bg: #f8fafc;
   --radius-card: 2rem;
 }
+
+:root {
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-muted: #94a3b8;
+  --accent-green: #10b981;
+  --accent-red: #f43f5e;
+}
 body {
   font-family: Bricolage Grotesque !important;
 }
@@ -118,80 +126,6 @@ body {
   background-color: #121212;
   color: #1e293b;
   font-family: "Manrope", sans-serif;
-}
-
-.resumen-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 1400px; /* O el ancho que prefieras */
-  margin: 0 auto;
-  padding: 0 1rem; /* Margen interno para que no toque los bordes */
-}
-.resumen-cards {
-  width: 100%;
-  max-width: 1400px;
-  padding: 1rem;
-  display: grid;
-  /* - auto-fit: ajusta tantas columnas como quepan.
-     - minmax(300px, 1fr): cada tarjeta mide mínimo 300px. 
-       Si no caben a lo ancho, bajarán automáticamente.
-  */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px; /* Espacio entre las tarjetas */
-}
-
-.Balance {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  background-color: #1c1c1c;
-  color: #fafafa;
-  border: 1px solid #2e2e2e;
-  border-radius: 20px;
-  padding: 1.5rem;
-  /* Eliminamos width: 30% para que el Grid controle el tamaño */
-  width: 100%;
-  transition: transform 0.2s ease;
-}
-
-/* Efecto opcional para que se sienta más Pro */
-.Balance:hover {
-  transform: translateY(-5px);
-  border-color: #006d77; /* Tu color accent */
-}
-.BalanceTitle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  h1 {
-    font-size: 25px;
-    font-weight: 700;
-    color: #ffffff; /* O el color de tu texto dark */
-    line-height: 1.2;
-  }
-  svg {
-    transform: scale(1.3);
-  }
-}
-.eye-btn {
-  display: flex;
-  gap: 10px;
-}
-.mini-eye {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-.mini-eye:hover {
-  color: #08afbe;
 }
 
 .amount {

@@ -49,30 +49,32 @@ const btnEditeSVG = (
 );
 
 export function Detalle() {
-  const { session } = useAuth(); // Obtenemos la sesión sin lógica extra
+  const {
+    session,
+    nickname,
+    role,
+    idTelegram,
+    gastosRaw,
+    refreshGastos,
+    loadingGastos,
+  } = useAuth();
 
-  // Estados simplificados
-  const [gastosRaw, setGastosRaw] = useState([]);
-  const [nickname, setNickname] = useState(null);
-  const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-  // Estados para Modal Crear Movimiento
+  // Estados locales de UI
   const [showModal, setShowModal] = useState(false);
-  const [type, setType] = useState("gasto"); // "gasto" o "ingreso"
+  const [type, setType] = useState("gasto");
   const [monto, setMonto] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState("Otros");
-  const [toast, setToast] = useState({ show: false, message: "" });
-  //Estados para Eliminar datos
+  const [reiniciarCiclo, setReiniciarCiclo] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  //Estados para Editar datos
-  const [editingGasto, setEditingGasto] = useState(null); // null = modal cerrado
+  const [editingGasto, setEditingGasto] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  // "mes" para vista calendario, "ciclo" para vista personalizada
-  const [vistaModo, setVistaModo] = useState("mes");
-  const [reiniciarCiclo, setReiniciarCiclo] = useState(false); // NUEVO ESTADO
+  /* const { vistaModo, setVistaModo } = useAuth(); */
+  const [vistaModo, setVistaModo] = useState(() => {
+    return localStorage.getItem("preferencia_vista") || "mes";
+  });
 
   // 1. LÓGICA DE FILTRADO REACTIVA
   const movimientosAMostrar = useMemo(() => {
@@ -83,21 +85,13 @@ export function Detalle() {
         (g) => g.month === mesActual && g.year === anioActual,
       );
     } else {
-      // 1. Buscamos el sueldo que marca el inicio del ciclo
-      const ultimoSueldo = gastosRaw.find(
-        (g) =>
-          g.type === "ingreso" &&
-          g.description_user?.toLowerCase().includes("sueldo") &&
-          g.category === "Ingreso",
-      );
-
+      // Filtrar por ciclo: Buscamos el registro marcado como sueldo
+      const ultimoSueldo = gastosRaw.find((g) => g.is_sueldo === true);
       if (!ultimoSueldo) return gastosRaw;
-
-      // 2. FILTRO MEJORADO: Traemos todo lo que sea posterior O sea el mismo ID del sueldo
       return gastosRaw.filter(
         (g) =>
-          new Date(g.created_at) > new Date(ultimoSueldo.created_at) ||
-          g.id === ultimoSueldo.id,
+          new Date(g.created_at).getTime() >=
+          new Date(ultimoSueldo.created_at).getTime(),
       );
     }
   }, [gastosRaw, vistaModo]);
@@ -105,40 +99,35 @@ export function Detalle() {
   // 2. LÓGICA DE AGRUPAMIENTO REACTIVA
   const grupos = useMemo(() => {
     return movimientosAMostrar.reduce((grupos, mov) => {
-      const fecha = new Date(mov.created_at).toLocaleDateString("es-CL", {
+      // Extraemos la fecha directamente del string YYYY-MM-DD para evitar el desfase de horas
+      // Esto asegura que si en la base dice 30, el encabezado diga 30
+      const [year, month, day] = mov.created_at.split("T")[0].split("-");
+      const fechaObj = new Date(year, month - 1, day); // Meses en JS son 0-11
+
+      const fechaFormateada = fechaObj.toLocaleDateString("es-CL", {
         day: "numeric",
         month: "long",
         year: "numeric",
       });
-      if (!grupos[fecha]) {
-        grupos[fecha] = { items: [], subtotal: 0 };
+
+      if (!grupos[fechaFormateada]) {
+        grupos[fechaFormateada] = { items: [], subtotal: 0 };
       }
-      grupos[fecha].items.push(mov);
+
+      grupos[fechaFormateada].items.push(mov);
       const montoNum = Number(mov.amount || 0);
-      grupos[fecha].subtotal += mov.type === "ingreso" ? montoNum : -montoNum;
+      grupos[fechaFormateada].subtotal +=
+        mov.type === "ingreso" ? montoNum : -montoNum;
+
       return grupos;
     }, {});
   }, [movimientosAMostrar]);
 
-  useEffect(() => {
-    if (session?.user) {
-      checkUserLink();
-    }
-  }, [session]);
-
   // Forzar categoría "Ingreso" si el tipo es ingreso
   useEffect(() => {
-    if (type === "ingreso") {
-      setCategoria("Ingreso");
-    } else if (type === "gasto" && categoria === "Ingreso") {
-      // Si vuelve a gasto, lo reseteamos a Otros para evitar errores
+    if (type === "ingreso") setCategoria("Ingreso");
+    else {
       setCategoria("Otros");
-    }
-  }, [type]);
-
-  useEffect(() => {
-    // Si el tipo cambia a gasto, forzamos que el switch se apague
-    if (type === "gasto") {
       setReiniciarCiclo(false);
     }
   }, [type]);
@@ -149,38 +138,9 @@ export function Detalle() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  async function checkUserLink() {
-    setLoading(true);
-    try {
-      // 1. Buscamos el perfil (usamos maybeSingle para evitar bloqueos)
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id_telegram")
-        .eq("auth_id", session.user.id)
-        .maybeSingle();
-
-      if (profile?.id_telegram) {
-        // 2. Buscamos el nombre del usuario
-        const { data: userData } = await supabase
-          .from("users")
-          .select("full_name, role")
-          .eq("id_telegram", profile.id_telegram)
-          .maybeSingle();
-
-        if (userData) {
-          setNickname(userData.full_name);
-          setRole(userData.role);
-        }
-
-        // 3. Cargamos los movimientos
-        await fetchExpenses();
-      }
-    } catch (err) {
-      console.error("Error en Detalle:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem("preferencia_vista", vistaModo);
+  }, [vistaModo]);
 
   async function fetchExpenses() {
     const { data: gastos, error } = await supabase
@@ -194,11 +154,12 @@ export function Detalle() {
     }
   }
 
-  //Funcion para insertar datos en la base
+  // Funcion para insertar datos en la base
   async function handleSave() {
     if (!type) return alert("Selecciona Gasto o Ingreso");
     if (!descripcion) return alert("Falta la descripción");
     const montoNumerico = Number(monto);
+
     if (!monto || isNaN(montoNumerico) || montoNumerico <= 0) {
       setToast({
         show: true,
@@ -210,32 +171,24 @@ export function Detalle() {
     }
 
     try {
-      // Obtenemos id_telegram del perfil cargado previamente
+      // 1. EXTRAEMOS DATOS DEL CONTEXTO (idTelegram viene de useAuth)
+      // Primero validamos el ciclo actual del perfil en tiempo real para seguridad
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id_telegram, current_cycle_id")
-        .eq("auth_id", session.user.id)
+        .select("current_cycle_id")
+        .eq("id_telegram", idTelegram) // idTelegram ya lo tenemos global
         .single();
 
       const ahora = new Date();
-
-      // Extraemos los datos según la hora local del usuario
-      const dia = ahora.getDate();
-      const mes = ahora.getMonth() + 1; // Enero es 0
-      const anio = ahora.getFullYear();
-      // Formato YYYY-MM-DD para la columna 'date'
-      const fechaLocal = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-
-      // Formato para created_at (incluyendo la hora local)
       const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
-      // 'sv-SE' genera YYYY-MM-DD HH:mm:ss que es compatible con Supabase
       const descripcionFinal =
         descripcion.trim().length > 60
           ? descripcion.trim().substring(0, 57) + "..."
           : descripcion.trim();
 
-      let nuevoCicloId = profile.current_cycle_id;
-      // --- LÓGICA DE REINICIO DE CICLO ---
+      let cicloIdFinal = profile.current_cycle_id;
+
+      // 2. LÓGICA DE REINICIO DE CICLO (Triple Acción de BI)
       if (type === "ingreso" && reiniciarCiclo) {
         // A. Cerrar ciclo actual
         await supabase
@@ -243,14 +196,12 @@ export function Detalle() {
           .update({ estado: false, fecha_fin: createdAtLocal })
           .eq("id", profile.current_cycle_id);
 
-        // B. Crear nuevo ciclo
-        // Primero contamos cuántos ciclos tiene el usuario para el número correlativo
-
+        // B. Crear nuevo ciclo y capturar su ID
         const { data: cicloNuevo, error: errorCiclo } = await supabase
           .from("ciclos")
           .insert([
             {
-              id_telegram: profile.id_telegram,
+              id_telegram: idTelegram,
               nombre: descripcionFinal,
               estado: true,
               monto_inicial: montoNumerico,
@@ -261,57 +212,61 @@ export function Detalle() {
           .single();
 
         if (errorCiclo) throw errorCiclo;
-        nuevoCicloId = cicloNuevo.id;
+        cicloIdFinal = cicloNuevo.id;
 
-        // C. Actualizar el ID del ciclo actual en el Perfil
+        // C. Vincular Perfil al Nuevo Ciclo
         await supabase
           .from("profiles")
-          .update({ current_cycle_id: nuevoCicloId })
-          .eq("id_telegram", profile.id_telegram);
+          .update({ current_cycle_id: cicloIdFinal })
+          .eq("id_telegram", idTelegram);
       }
-      const { error } = await supabase.from("gastos").insert([
+
+      // 3. INSERTAR EL MOVIMIENTO FINAL
+      const { error: errorGasto } = await supabase.from("gastos").insert([
         {
           origin: "web",
           amount: montoNumerico,
-          description_user: descripcionFinal, // Lo que escribes en el modal
+          description_user: descripcionFinal,
           description_telegram: descripcionFinal,
           category: categoria,
           type: type,
-          id_telegram: profile?.id_telegram, // Vínculo esencial
-          user: nickname, // Tu nombre
-          // Campos de tiempo para tu análisis de BI
-          date: fechaLocal,
-          day: dia,
-          month: mes,
-          year: anio,
+          id_telegram: idTelegram,
+          user: nickname, // Viene del contexto
+          date: ahora.toISOString().split("T")[0],
+          day: ahora.getDate(),
+          month: ahora.getMonth() + 1,
+          year: ahora.getFullYear(),
           created_at: createdAtLocal,
-          ciclo_id: nuevoCicloId,
-          is_sueldo: reiniciarCiclo,
+          ciclo_id: cicloIdFinal, // Vinculación garantizada
+          is_sueldo: type === "ingreso" && reiniciarCiclo,
         },
       ]);
 
-      if (error) throw error;
+      if (errorGasto) throw errorGasto;
 
+      // 4. FEEDBACK Y REFRESCO GLOBAL
       setShowModal(false);
       setToast({
         show: true,
-        message: "¡Movimiento guardado con éxito! ✅",
+        message: reiniciarCiclo
+          ? "¡Nuevo Ciclo Iniciado! 🚀"
+          : "¡Movimiento guardado! ✅",
         type: "success",
       });
-      // Limpiamos estados
+
+      // Reset de estados locales
       setMonto("");
       setDescripcion("");
       setReiniciarCiclo(false);
-      setType(null);
-      fetchExpenses(); // Refresca la tabla automáticamente
+      setType("gasto");
 
-      // Desaparece después de 3 segundos
-      setTimeout(() => {
-        setToast({ show: false, message: "" });
-      }, 3000);
+      // RECARGA INSTANTÁNEA: Actualiza la lista global en el Contexto
+      await refreshGastos();
+
+      setTimeout(() => setToast({ show: false, message: "" }), 3000);
     } catch (err) {
       console.error("Error completo:", err);
-      alert("No se pudo guardar el movimiento");
+      alert("No se pudo completar la operación");
     }
   }
 
@@ -328,6 +283,7 @@ export function Detalle() {
     try {
       const ahora = new Date();
       const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
+
       const { error } = await supabase
         .from("gastos")
         .update({ deleted_at: createdAtLocal }) // Marcamos como eliminado
@@ -335,18 +291,24 @@ export function Detalle() {
 
       if (error) throw error;
 
+      // 1. FEEDBACK VISUAL
       setToast({
         show: true,
         message: "Movimiento movido a la papelera 🗑️",
         type: "success",
       });
       setShowDeleteModal(false);
-      fetchExpenses();
+
+      // 2. LA CLAVE: Sincronización Global
+      // Reemplazamos fetchExpenses() por refreshGastos() del contexto
+      await refreshGastos();
+
       setTimeout(() => {
         setToast({ show: false, message: "" });
       }, 3000);
     } catch (err) {
       setToast({ show: true, message: "Error al procesar ❌", type: "error" });
+      console.error("Error al eliminar:", err);
     }
   }
   // Ejecutar Actualizar
@@ -395,14 +357,16 @@ export function Detalle() {
       if (error) throw error;
 
       // 5. Feedback de éxito
-      setEditingGasto(null); // Cerramos el modal inmediatamente
+      setEditingGasto(null);
       setToast({
         show: true,
         message: "¡Movimiento actualizado! ✨",
         type: "success",
       });
 
-      fetchExpenses(); // Refrescamos los datos del Dashboard
+      // LA CLAVE: Sincronización Global
+      // Reemplazamos fetchExpenses() por la función del Contexto
+      await refreshGastos();
     } catch (err) {
       console.error("Error al actualizar:", err);
       setToast({
@@ -411,14 +375,13 @@ export function Detalle() {
         type: "error",
       });
     } finally {
-      // 6. Limpieza automática del Toast después de 3 segundos
       setTimeout(() => {
         setToast({ show: false, message: "", type: "" });
       }, 3000);
     }
   }
 
-  if (loading) return <Loading />;
+  if (loadingGastos && gastosRaw.length === 0) return <Loading />;
 
   return (
     <>
