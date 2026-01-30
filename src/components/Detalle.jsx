@@ -805,12 +805,13 @@ export function Detalle() {
                             </h2>
 
                             <span
+                              className={isHidden ? "monto-blurred" : ""}
                               style={{
                                 color:
                                   g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                transition: "all 0.3s ease", // Transición suave para el efecto premium
                               }}
                             >
-                              {" "}
                               {g.type === "gasto"
                                 ? `-$${Number(g.amount || g.monto).toLocaleString("es-CL")}`
                                 : `$${Number(g.amount || g.monto).toLocaleString("es-CL")}`}
