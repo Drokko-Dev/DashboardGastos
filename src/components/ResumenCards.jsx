@@ -27,6 +27,7 @@ const EyeIcon = ({ closed }) => (
 export function ResumenCards({
   totalMes,
   gastoMes,
+  ingresoMes,
   ahorroMes,
   states,
   onToggle,
@@ -36,6 +37,7 @@ export function ResumenCards({
       id: "total",
       label: "Saldo Total",
       value: totalMes,
+      extra: ahorroMes,
       isPrivate: states.total,
       color: totalMes < 0 ? "var(--accent-red)" : "var(--accent-green)",
       icon: (
@@ -45,7 +47,7 @@ export function ResumenCards({
     {
       id: "ingreso",
       label: "Ingreso Mensual",
-      value: ahorroMes,
+      value: ingresoMes,
       isPrivate: states.ingreso,
       color: "#10b981",
       icon: <path d="M12 19V5M5 12l7-7 7 7" />,
@@ -87,6 +89,15 @@ export function ResumenCards({
                   ? `-$${card.value.toLocaleString("es-CL")}`
                   : `$${card.value.toLocaleString("es-CL")}`}
             </h2>
+
+            {!card.isPrivate && card.id === "total" && card.extra > 0 && (
+              <div className="extra-ahorro-badge">
+                <span className="ahorro-label">Ahorro:</span>
+                <span className="ahorro-value">
+                  +${card.extra.toLocaleString("es-CL")}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="premium-card-bg-icon">

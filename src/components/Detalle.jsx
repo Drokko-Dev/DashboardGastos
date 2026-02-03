@@ -16,6 +16,7 @@ const CATEGORY_COLORS = {
   Compras: "#a8dbdb",
   Fijos: "#6366F1",
   Otros: "#697fa193",
+  Ahorro: "#00d4ff", // Un cian eléctrico para resaltar el ahorro
 };
 
 const btnDeleteSVG = (
@@ -53,6 +54,7 @@ export function Detalle() {
     session,
     nickname,
     role,
+    currentCycleId,
     idTelegram,
     gastosRaw,
     refreshGastos,
@@ -87,13 +89,9 @@ export function Detalle() {
       );
     } else {
       // Filtrar por ciclo: Buscamos el registro marcado como sueldo
-      const ultimoSueldo = gastosRaw.find((g) => g.is_sueldo === true);
-      if (!ultimoSueldo) return gastosRaw;
-      return gastosRaw.filter(
-        (g) =>
-          new Date(g.created_at).getTime() >=
-          new Date(ultimoSueldo.created_at).getTime(),
-      );
+      /* const CicloActual = gastosRaw.find((g) => g.ciclo_id === currentCycleId); */
+      if (!currentCycleId) return gastosRaw;
+      return gastosRaw.filter((g) => g.ciclo_id === currentCycleId);
     }
   }, [gastosRaw, vistaModo]);
 
@@ -762,6 +760,11 @@ export function Detalle() {
                       (g.type === "gasto" && states?.gasto);
                     const categoriaColor =
                       CATEGORY_COLORS[g.category] || "#94a3b8";
+                    const getMontoColor = (type) => {
+                      if (type === "ahorro") return "#00d4ff"; // Color cian para ahorro
+                      if (type === "gasto") return "#ef4444"; // Rojo para gasto
+                      return "#36d35d"; // Verde para ingreso
+                    };
 
                     return (
                       <article className="ticket-card" key={g.id}>
@@ -807,8 +810,7 @@ export function Detalle() {
                             <span
                               className={isHidden ? "monto-blurred" : ""}
                               style={{
-                                color:
-                                  g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                color: getMontoColor(g.type),
                                 transition: "all 0.3s ease", // Transición suave para el efecto premium
                               }}
                             >
@@ -821,12 +823,16 @@ export function Detalle() {
                           <>
                             <h2
                               className={`category ${g.category}`}
-                              style={{
-                                color: `${categoriaColor}`,
-                                opacity: 0.85,
-                                borderColor: categoriaColor,
-                                backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                              }}
+                              style={
+                                g.category === "Ahorro"
+                                  ? {}
+                                  : {
+                                      color: `${categoriaColor}`,
+                                      opacity: 0.85,
+                                      borderColor: categoriaColor,
+                                      backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                                    }
+                              }
                             >
                               {g.category || "GENERAL"}
                             </h2>
@@ -834,8 +840,7 @@ export function Detalle() {
                             <span
                               className={isHidden ? "monto-blurred" : ""}
                               style={{
-                                color:
-                                  g.type === "gasto" ? "#ef4444" : "#36d35d",
+                                color: getMontoColor(g.type),
                                 transition: "all 0.3s ease", // Transición suave para el efecto premium
                               }}
                             >

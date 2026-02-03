@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   const [nickname, setNickname] = useState("");
   const [role, setRole] = useState("");
   const [idTelegram, setIdTelegram] = useState(null);
+  const [currentCycleId, setCurrentCycleId] = useState(null);
+  const [cicloData, setCicloData] = useState(null);
 
   // ESTADOS GLOBALES DE MOVIMIENTOS (La clave de la velocidad)
   const [gastosRaw, setGastosRaw] = useState(() => {
@@ -60,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id_telegram")
+        .select("id_telegram, current_cycle_id")
         .eq("auth_id", userId)
         .maybeSingle();
 
@@ -75,6 +77,21 @@ export const AuthProvider = ({ children }) => {
         if (userData) {
           setNickname(userData.full_name);
           setRole(userData.role);
+          setCurrentCycleId(profile.current_cycle_id);
+        }
+
+        // 2. BUSCAMOS EL CICLO COMPLETO (La clave del cambio)
+        if (profile.current_cycle_id) {
+          const { data: cicloInfo } = await supabase
+            .from("ciclos")
+            .select("*")
+            .eq("id", profile.current_cycle_id)
+            .maybeSingle();
+
+          if (cicloInfo) {
+            setCicloData(cicloInfo); // Ahora todo el dashboard sabe las fechas
+            setCurrentCycleId(profile.current_cycle_id);
+          }
         }
 
         // Una vez que tenemos el perfil, cargamos los gastos automáticamente
@@ -123,6 +140,8 @@ export const AuthProvider = ({ children }) => {
         nickname,
         role,
         idTelegram,
+        currentCycleId,
+        cicloData,
         gastosRaw,
         loadingGastos,
         refreshGastos,

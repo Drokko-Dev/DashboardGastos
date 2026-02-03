@@ -18,6 +18,7 @@ import {
 import { Link as LinkIcon } from "lucide-react";
 import { ResumenCards } from "./ResumenCards";
 import { Loading } from "./Loading";
+import { CicloBanner } from "./CicloBanner";
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -54,6 +55,8 @@ export default function Dashboard() {
     session,
     idTelegram,
     nickname,
+    currentCycleId,
+    cicloData,
     gastosRaw,
     loadingGastos,
     states,
@@ -64,6 +67,7 @@ export default function Dashboard() {
   const [dataTorta, setDataTorta] = useState([]);
   const [totalMesGasto, setTotalMesGasto] = useState(0);
   const [totalMesIngreso, setTotalMesIngreso] = useState(0);
+  const [totalMesAhorro, setTotalMesAhorro] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const añoHoy = new Date().getFullYear();
 
@@ -86,17 +90,21 @@ export default function Dashboard() {
     if (gastosRaw.length > 0) {
       // Totales
       const sumaG = gastosRaw
-        .filter((g) => g.type === "gasto")
+        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
         .reduce((acc, g) => acc + Number(g.amount || 0), 0);
       const sumaI = gastosRaw
-        .filter((g) => g.type === "ingreso")
+        .filter((g) => g.type === "ingreso" && g.ciclo_id === currentCycleId)
+        .reduce((acc, i) => acc + Number(i.amount || 0), 0);
+      const sumaA = gastosRaw
+        .filter((g) => g.type === "ahorro" && g.ciclo_id === currentCycleId)
         .reduce((acc, i) => acc + Number(i.amount || 0), 0);
       setTotalMesGasto(sumaG);
       setTotalMesIngreso(sumaI);
+      setTotalMesAhorro(sumaA);
 
       // Datos Torta
       const porCat = gastosRaw
-        .filter((g) => g.type === "gasto")
+        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
         .reduce((acc, g) => {
           const c = g.category || "Otros";
           acc[c] = (acc[c] || 0) + Number(g.amount || 0);
@@ -163,12 +171,14 @@ export default function Dashboard() {
   return (
     <>
       {/* <Navbar /> */}
+      <CicloBanner ciclo={cicloData} />
       <div className="resumen-container">
         <ResumenCards
           // Pasamos los valores numéricos puros (Sin formatear aquí)
-          totalMes={totalMesIngreso - totalMesGasto}
+          totalMes={totalMesIngreso - totalMesGasto - totalMesAhorro}
           gastoMes={totalMesGasto}
-          ahorroMes={totalMesIngreso}
+          ingresoMes={totalMesIngreso}
+          ahorroMes={totalMesAhorro}
           // Usamos los nombres que vienen del AuthContext
           states={states}
           onToggle={togglePrivacy}

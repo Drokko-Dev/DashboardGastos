@@ -154,6 +154,43 @@
   transform: rotate(-15deg);
 }
 
+.extra-ahorro-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  background: rgba(0, 212, 255, 0.15); /* El cian que usamos antes */
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.ahorro-label {
+  font-size: 0.65rem;
+  color: #a5f3fc;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.ahorro-value {
+  font-size: 0.75rem;
+  color: #00d4ff;
+  font-weight: 800;
+  font-family: "Inter", sans-serif;
+}
+
+/* Para que la tarjeta de Total destaque sobre las otras */
+.card-total {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.8) 0%,
+    rgba(15, 23, 42, 0.9) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  grid-column: span 2; /* Opcional: que la tarjeta de Disponible ocupe más espacio */
+}
+
 /* Optimización móvil S24 */
 @media (max-width: 830px) {
   .resumen-grid-premium {
