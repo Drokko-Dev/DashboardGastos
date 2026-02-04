@@ -1,39 +1,15 @@
-/* Contenedor principal que oscurece el fondo */
-.bottom-sheet-overlay {
+/* Contenedor que cubre toda la pantalla */
+.full-screen-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 2000;
-  display: flex;
-  align-items: flex-end; /* Pega el contenido abajo */
-}
-
-.bottom-sheet-content {
-  width: 100%;
-  /* Cambiamos max-height por una altura fija o más controlada en móvil */
-  height: auto;
-  max-height: 92vh;
-  min-height: 500px; /* Evita que colapse al cambiar de pestaña */
-
-  background: #111827;
-  border-radius: 28px 28px 0 0;
-  padding: 16px 20px 32px 20px;
+  background: #0f172a;
+  z-index: 3000;
   display: flex;
   flex-direction: column;
-
-  /* Esto es clave para que el scroll interno sea suave en celulares */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-
-  /* Evita saltos visuales al aparecer el teclado */
-  transition: height 0.2s ease;
+  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slideUp {
+@keyframes slideInUp {
   from {
     transform: translateY(100%);
   }
@@ -42,215 +18,261 @@
   }
 }
 
-/* Tirador visual superior */
-.sheet-handle {
-  width: 40px;
-  height: 5px;
-  background: #374151;
-  border-radius: 10px;
-  margin: 0 auto 20px auto;
-  cursor: pointer;
+.full-screen-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 70%;
+  margin: 0 auto;
 }
 
-/* Selector de Gasto / Ingreso / Ahorro (Pills) */
-.type-selector-pills {
+/* Header Fijo */
+.full-screen-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 20px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  /* padding-top: env(safe-area-inset-top, 15px); */
+}
+
+.full-screen-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.close-btn {
+  position: absolute;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  right: 20px;
+  svg {
+    transition: all 0.3s ease;
+    transform: scale(1.1);
+    color: red;
+  }
+
+  /* width: 30px;
+  text-align: left; */
+  cursor: pointer;
+  &:hover {
+    svg {
+      transform: scale(1.2);
+      color: red;
+    }
+  }
+}
+
+.header-spacer {
+  width: 30px;
+}
+
+/* Cuerpo Escrolleable */
+.full-screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #0f172a;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Selector tipo Pastilla */
+.type-selector-pills-modern {
   display: flex;
   background: #1f2937;
   padding: 4px;
   border-radius: 14px;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .pill-btn {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border: none;
   background: transparent;
   color: #9ca3af;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
   border-radius: 10px;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   cursor: pointer;
+}
+
+.pill-btn.gasto.active {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+.pill-btn.ingreso.active {
+  background: #10b981;
+  color: #ffffff;
+}
+.pill-btn.ahorro.active {
+  background: #00d4ff;
+  color: #ffffff;
 }
 
 .pill-btn.active {
   background: #ffffff;
   color: #000000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Pantalla de Monto Grande */
-.monto-display {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 30px;
-  color: #ffffff;
+/* Bloques de Input */
+.input-block {
+  margin-bottom: 25px;
+  position: relative;
 }
 
-.monto-display .currency {
-  font-size: 2rem;
-  font-weight: 300;
-  color: #9ca3af;
-}
-
-.monto-display input {
-  background: transparent;
-  border: none;
-  font-size: 3.5rem;
-  font-weight: 800;
-  color: white;
-  width: 100%;
-  text-align: center;
-  outline: none;
-  font-family: "Inter", sans-serif;
-}
-
-/* Grupos de formulario */
-.form-group {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
+.input-block label {
+  display: block;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #6b7280;
+  color: #94a3b8;
   text-transform: uppercase;
+  font-weight: 800;
+  margin-bottom: 8px;
   letter-spacing: 0.05em;
 }
 
-.form-group textarea,
-.form-group select {
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 12px;
-  padding: 14px;
+.monto-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 8px 18px;
+}
+
+.monto-input-wrapper .symbol {
+  font-size: 1.5rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.monto-input-wrapper input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  font-weight: 800;
+  width: 100%;
+  outline: none;
+  padding-left: 10px;
+}
+
+.input-block textarea,
+.input-block select {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 15px;
   color: white;
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.2s;
 }
 
-.form-group textarea:focus,
-.form-group select:focus {
-  border-color: #60a5fa;
-}
-
-.form-group textarea {
+.input-block textarea {
+  min-height: 100px;
   resize: none;
-  min-height: 80px;
 }
 
-/* Tarjeta especial para Ciclo */
-.cycle-option-card {
+.char-count {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-align: right;
+  display: block;
+  margin-top: 5px;
+}
+
+.helper-text {
+  font-size: 0.75rem;
+  color: #f87171;
+  margin-top: 8px;
+  display: block;
+}
+
+/* Tarjeta Ciclo */
+.special-card-modern {
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.2);
-  padding: 16px;
-  border-radius: 16px;
+  padding: 18px;
+  border-radius: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
 }
 
-.cycle-option-card .text strong {
-  display: block;
+.special-card-modern strong {
   color: #10b981;
-  font-size: 0.95rem;
+  display: block;
 }
-
-.cycle-option-card .text p {
-  font-size: 0.75rem;
+.special-card-modern span {
+  font-size: 0.8rem;
   color: #6ee7b7;
-  margin: 2px 0 0 0;
 }
 
-/* Forzamos que el cuerpo interno no colapse */
-.sheet-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* Footer y Botón */
+.full-screen-footer {
+  padding: 20px;
+  /* padding-bottom: env(safe-area-inset-bottom, 20px); */
+  background: #1e293b;
+  border-top: 1px solid #334155;
 }
 
-.sheet-footer {
-  margin-top: auto; /* Empuja el botón siempre al final */
-  padding-top: 20px;
-  padding-bottom: env(safe-area-inset-bottom, 10px);
-}
-.btn-confirm {
+.btn-main-save {
   width: 100%;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 18px;
+  border-radius: 18px;
   border: none;
-  background: #ffffff;
-  color: #000000;
   font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s active;
+  font-weight: 800;
+  color: white;
+  background: #3b82f6; /* Azul por defecto */
+  transition: transform 0.1s;
 }
 
-.btn-confirm:active {
-  transform: scale(0.98);
-  background: #f3f4f6;
+.btn-main-save:active {
+  transform: scale(0.97);
 }
 
-/* Rojo para Gastos */
-.bottom-sheet-content.gasto .btn-confirm {
+/* Colores dinámicos para el botón final */
+.full-screen-container.gasto .btn-main-save {
   background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
-
-/* Verde para Ingresos */
-.bottom-sheet-content.ingreso .btn-confirm {
+.full-screen-container.ingreso .btn-main-save {
   background: #10b981;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
 }
-
-/* Cian/Azul para Ahorros */
-.bottom-sheet-content.ahorro .btn-confirm {
+.full-screen-container.ahorro .btn-main-save {
   background: #00d4ff;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 212, 255, 0.4);
 }
-
-/* Efecto al presionar (para todos) */
-.btn-confirm:active {
-  transform: scale(0.96);
-  filter: brightness(0.9);
-}
-/* Ajuste para Desktop (PC) */
-@media (min-width: 768px) {
-  .bottom-sheet-content {
-    width: 80%;
-    margin: 0 auto;
+/* Centrado para pantallas de PC y Tablets grandes */
+@media (min-width: 1201px) {
+  .full-screen-overlay {
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    background: rgba(0, 0, 0, 0.85); /* Fondo semitransparente en PC */
   }
 
-  .bottom-sheet-content {
-    border-radius: 24px; /* Bordes redondeados en todas las esquinas */
-    margin-bottom: 0;
-    max-height: 80vh;
+  .full-screen-container {
+    width: 700px; /* Ancho fijo ideal para formularios */
+    height: 90vh; /* No ocupa todo el alto en PC */
+    border-radius: 24px; /* Bordes redondeados en PC */
+    overflow: hidden; /* Mantiene el header y footer dentro del radio */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 }
 
-@media (max-width: 768px) {
-  .monto-display input {
-    font-size: 2.5rem !important; /* Achicamos el número si hay poco espacio vertical */
-  }
-}
-
-/* Ajuste para pantallas muy pequeñas o teclados abiertos */
-@media (max-height: 600px) {
-  .monto-display {
-    margin-bottom: 10px;
+/* Pantallas Medianas / Laptops */
+@media (max-width: 1200px) {
+  .full-screen-container {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
   }
 }
