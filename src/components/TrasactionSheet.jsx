@@ -17,7 +17,7 @@ export function TransactionSheet({
   onSave,
   CATEGORY_COLORS,
 }) {
-  // 1. REGLA DE HOOKS: Todos los useEffect arriba
+  // 1. REGLA DE HOOKS: Bloqueo de scroll del fondo
   useEffect(() => {
     if (show) {
       document.body.style.overflow = "hidden";
@@ -29,6 +29,7 @@ export function TransactionSheet({
     };
   }, [show]);
 
+  // 2. Sincronización de categorías según el tipo
   useEffect(() => {
     if (type === "ingreso") {
       setCategoria("Ingreso");
@@ -36,22 +37,21 @@ export function TransactionSheet({
       setCategoria("Ahorro");
       setReiniciarCiclo(false);
     } else {
-      // Si el estado es "Ingreso" o "Ahorro" pero cambiamos a gasto, reseteamos
       if (categoria === "Ingreso" || categoria === "Ahorro") {
         setCategoria("Otros");
       }
       setReiniciarCiclo(false);
     }
-  }, [type]);
+  }, [type, setCategoria, setReiniciarCiclo]);
 
-  // 2. Control de renderizado
   if (!show) return null;
 
   return (
     <div className="full-screen-overlay">
       <div className={`full-screen-container ${type}`}>
-        {/* CABECERA ESTILO APP NATIVA */}
+        {/* CABECERA FIJA */}
         <header className="full-screen-header">
+          <div className="header-spacer"></div>
           <h2>Nuevo Movimiento</h2>
           <button className="close-btn" onClick={onClose}>
             <svg
@@ -63,23 +63,19 @@ export function TransactionSheet({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              className="icon icon-tabler icons-tabler-outline icon-tabler-x"
             >
-              <path stroke="none" d="M0 0h24v24H0z" />
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
-          <div className="header-spacer"></div>
         </header>
 
         {/* CUERPO CON SCROLL INDEPENDIENTE */}
-        <div className="full-screen-body">
-          {/* SELECTOR DE TIPO (PILLS) */}
+        <main className="full-screen-body">
           <div className="type-selector-pills-modern">
             {["gasto", "ingreso", "ahorro"].map((t) => (
               <button
                 key={t}
-                className={`pill-btn ${type} ${type === t ? "active" : ""}`}
+                className={`pill-btn ${t} ${type === t ? "active" : ""}`}
                 onClick={() => setType(t)}
               >
                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -88,7 +84,6 @@ export function TransactionSheet({
           </div>
 
           <div className="form-content">
-            {/* INPUT DE MONTO */}
             <div className="input-block">
               <label>Monto</label>
               <div className="monto-input-wrapper">
@@ -104,7 +99,6 @@ export function TransactionSheet({
               </div>
             </div>
 
-            {/* INPUT DE DESCRIPCIÓN */}
             <div className="input-block">
               <label>Descripción</label>
               <textarea
@@ -112,11 +106,11 @@ export function TransactionSheet({
                 onChange={(e) => setDescripcion(e.target.value)}
                 placeholder="¿En qué se usó el dinero?"
                 maxLength={60}
+                rows="2"
               />
               <span className="char-count">{descripcion.length}/60</span>
             </div>
 
-            {/* SELECT DE CATEGORÍA */}
             <div className="input-block">
               <label>Categoría</label>
               <select
@@ -141,19 +135,8 @@ export function TransactionSheet({
                   </option>
                 )}
               </select>
-              {/* {type !== "gasto" && (
-                <span className="helper-text">
-                  🚨 Los {type}s se asignan automáticamente.
-                </span>
-              )} */}
-              {type == "ingreso" && (
-                <span className="helper-text">
-                  🚨 Estos movimientos siempre quedan en la categoria Ingreso.
-                </span>
-              )}
             </div>
 
-            {/* OPCIÓN DE CICLO (SOLO INGRESO) */}
             {type === "ingreso" && (
               <div className="special-card-modern">
                 <div className="info">
@@ -171,12 +154,12 @@ export function TransactionSheet({
               </div>
             )}
           </div>
-        </div>
+        </main>
 
-        {/* BOTÓN FIJO AL FINAL */}
+        {/* FOOTER FIJO ABAJO */}
         <footer className="full-screen-footer">
           <button className="btn-main-save" onClick={onSave}>
-            Registrar {type}
+            Registrar {type.charAt(0).toUpperCase() + type.slice(1)}
           </button>
         </footer>
       </div>
