@@ -9,18 +9,28 @@
   align-items: flex-end; /* Pega el contenido abajo */
 }
 
-/* La hoja deslizable */
 .bottom-sheet-content {
   width: 100%;
-  max-height: 90vh;
-  background: #111827; /* Fondo oscuro azulado premium */
+  /* Cambiamos max-height por una altura fija o más controlada en móvil */
+  height: auto;
+  max-height: 92vh;
+  min-height: 500px; /* Evita que colapse al cambiar de pestaña */
+
+  background: #111827;
   border-radius: 28px 28px 0 0;
   padding: 16px 20px 32px 20px;
   display: flex;
   flex-direction: column;
+
+  /* Esto es clave para que el scroll interno sea suave en celulares */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow-y: auto;
+
+  /* Evita saltos visuales al aparecer el teclado */
+  transition: height 0.2s ease;
 }
 
 @keyframes slideUp {
@@ -161,11 +171,19 @@
   margin: 2px 0 0 0;
 }
 
-/* Botón de Guardar */
-.sheet-footer {
-  margin-top: 20px;
+/* Forzamos que el cuerpo interno no colapse */
+.sheet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
+.sheet-footer {
+  margin-top: auto; /* Empuja el botón siempre al final */
+  padding-top: 20px;
+  padding-bottom: env(safe-area-inset-bottom, 10px);
+}
 .btn-confirm {
   width: 100%;
   padding: 16px;

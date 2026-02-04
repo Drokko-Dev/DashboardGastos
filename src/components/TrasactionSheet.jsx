@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import "../styles/transaction_sheet.css";
 
 export function TransactionSheet({
@@ -21,6 +22,21 @@ export function TransactionSheet({
     if (type === "ingreso") setCategoria("Ingreso");
     if (type === "ahorro") setCategoria("Ahorro");
   }, [type]);
+
+  useEffect(() => {
+    if (show) {
+      // Bloquea el scroll del fondo
+      document.body.style.overflow = "hidden";
+    } else {
+      // Lo libera al cerrar
+      document.body.style.overflow = "unset";
+    }
+    // Limpieza por si el componente se desmonta de golpe
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [show]);
+
   if (!show) return null;
 
   return (
