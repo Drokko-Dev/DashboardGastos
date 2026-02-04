@@ -1,0 +1,238 @@
+/* Contenedor principal que oscurece el fondo */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end; /* Pega el contenido abajo */
+}
+
+/* La hoja deslizable */
+.bottom-sheet-content {
+  width: 100%;
+  max-height: 90vh;
+  background: #111827; /* Fondo oscuro azulado premium */
+  border-radius: 28px 28px 0 0;
+  padding: 16px 20px 32px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Tirador visual superior */
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: #374151;
+  border-radius: 10px;
+  margin: 0 auto 20px auto;
+  cursor: pointer;
+}
+
+/* Selector de Gasto / Ingreso / Ahorro (Pills) */
+.type-selector-pills {
+  display: flex;
+  background: #1f2937;
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.pill-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pill-btn.active {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Pantalla de Monto Grande */
+.monto-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 30px;
+  color: #ffffff;
+}
+
+.monto-display .currency {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #9ca3af;
+}
+
+.monto-display input {
+  background: transparent;
+  border: none;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: white;
+  width: 100%;
+  text-align: center;
+  outline: none;
+  font-family: "Inter", sans-serif;
+}
+
+/* Grupos de formulario */
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group textarea,
+.form-group select {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 14px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #60a5fa;
+}
+
+.form-group textarea {
+  resize: none;
+  min-height: 80px;
+}
+
+/* Tarjeta especial para Ciclo */
+.cycle-option-card {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.cycle-option-card .text strong {
+  display: block;
+  color: #10b981;
+  font-size: 0.95rem;
+}
+
+.cycle-option-card .text p {
+  font-size: 0.75rem;
+  color: #6ee7b7;
+  margin: 2px 0 0 0;
+}
+
+/* Botón de Guardar */
+.sheet-footer {
+  margin-top: 20px;
+}
+
+.btn-confirm {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  border: none;
+  background: #ffffff;
+  color: #000000;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s active;
+}
+
+.btn-confirm:active {
+  transform: scale(0.98);
+  background: #f3f4f6;
+}
+
+/* Rojo para Gastos */
+.bottom-sheet-content.gasto .btn-confirm {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* Verde para Ingresos */
+.bottom-sheet-content.ingreso .btn-confirm {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+/* Cian/Azul para Ahorros */
+.bottom-sheet-content.ahorro .btn-confirm {
+  background: #00d4ff;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 212, 255, 0.4);
+}
+
+/* Efecto al presionar (para todos) */
+.btn-confirm:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+/* Ajuste para Desktop (PC) */
+@media (min-width: 768px) {
+  .bottom-sheet-content {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .bottom-sheet-content {
+    border-radius: 24px; /* Bordes redondeados en todas las esquinas */
+    margin-bottom: 0;
+    max-height: 80vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .monto-display input {
+    font-size: 2.5rem !important; /* Achicamos el número si hay poco espacio vertical */
+  }
+}
+
+/* Ajuste para pantallas muy pequeñas o teclados abiertos */
+@media (max-height: 600px) {
+  .monto-display {
+    margin-bottom: 10px;
+  }
+}

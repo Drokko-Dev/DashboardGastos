@@ -131,6 +131,24 @@ export const AuthProvider = ({ children }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+  // ... dentro de AuthProvider ...
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Si la pestaña pasa de estar en segundo plano a estar visible
+      if (document.visibilityState === "visible" && session) {
+        console.log("App recuperada: Refrescando datos...");
+        refreshGastos();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Limpieza al desmontar el componente
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [session]); // Se ejecuta cuando la sesión está activa
 
   return (
     <AuthContext.Provider
