@@ -34,14 +34,14 @@ export const Descargas = () => {
     // Definimos la configuración según el tipo (Excel o PDF)
     const config = {
       excel: {
-        url: "http://127.0.0.1:5000/api/export-excel",
+        url: "https://finance-api-up1k.onrender.com/api/export-excel", // <--- NUEVA URL
         ext: "xlsx",
-        mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        // ...
       },
       pdf: {
-        url: "http://127.0.0.1:5000/api/export-pdf",
+        url: "https://finance-api-up1k.onrender.com/api/export-pdf", // <--- NUEVA URL
         ext: "pdf",
-        mime: "application/pdf",
+        // ...
       },
     };
 
