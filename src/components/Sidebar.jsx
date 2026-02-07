@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 
@@ -78,7 +78,19 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
     <>
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <h1>{svgLogo} FinanceTracker</h1>
+          <Link
+            onClick={toggleSidebar}
+            className="logo-link"
+            to="/"
+            style={{
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <h1>{svgLogo} FinanceTracker</h1>
+          </Link>
+
           <button className="close-sidebar" onClick={toggleSidebar}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

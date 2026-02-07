@@ -1,7 +1,7 @@
 .navbar {
   /* background-color: var(--color-brand-primary); */
   position: fixed;
-  z-index: 9999;
+  z-index: 2000;
   color: #08afbe;
   background-color: #1c1c1c;
   display: flex;
@@ -16,13 +16,25 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* p {
-    gap: 5px;
-    display: flex;
-    svg {
-      transform: scale(1.2);
-    }
-  } */
+}
+
+.logo-link {
+  flex-shrink: 1; /* Permite que el logo se encoja un poco si es necesario */
+  min-width: 0; /* Evita desbordamientos extraños en flexbox */
+  overflow: hidden; /* Corta cualquier excedente visual */
+}
+
+.logo-link:active {
+  transform: scale(0.95); /* El logo se hunde un poquito al tocarlo */
+  opacity: 0.8;
+  transition: 0.1s;
+}
+
+.navbar-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Reducimos el espacio en móviles */
+  flex-shrink: 0; /* Las acciones (refresco/menú) nunca deben achicarse */
 }
 .hamburger {
   background: none;
@@ -46,6 +58,30 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+
+  /* Animación de rotación infinita */
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Efecto táctil para S24 */
+  .btn-refresh:active {
+    transform: scale(0.85);
+    transition: transform 0.1s ease;
+  }
+  .btn-refresh:hover {
+    transform: scale(1.1) !important;
+    transition: transform 0.1s ease;
+  }
 
   /*   .btn-logout {
     display: flex;

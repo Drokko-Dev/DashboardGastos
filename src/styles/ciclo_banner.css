@@ -1,0 +1,63 @@
+.ciclo-minimal-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Línea muy fina */
+}
+
+.ciclo-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ciclo-dot {
+  width: 8px;
+  height: 8px;
+  background: #36d35d;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #36d35d;
+  display: inline-block;
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(54, 211, 93, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(54, 211, 93, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(54, 211, 93, 0);
+  }
+}
+
+.ciclo-dates {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #f8fafc;
+  letter-spacing: -0.2px;
+}
+
+.ciclo-right {
+  display: flex;
+  align-items: center;
+}
+
+.ciclo-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b; /* Texto apagado */
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2px 8px;
+  border-radius: 4px;
+}

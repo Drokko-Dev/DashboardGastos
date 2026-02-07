@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Importamos el nuevo contexto
+import { useAuth } from "../context/AuthContext";
 import {
   BarChart,
   Bar,
@@ -17,9 +16,9 @@ import {
   LabelList,
 } from "recharts";
 import { Link as LinkIcon } from "lucide-react";
-import { Navbar } from "./Navbar";
 import { ResumenCards } from "./ResumenCards";
 import { Loading } from "./Loading";
+import { CicloBanner } from "./CicloBanner";
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -51,46 +50,91 @@ const NOMBRES_MESES = [
 ];
 
 export default function Dashboard() {
-  const { session } = useAuth(); // Obtenemos la sesión global
+  // 1. CONSUMO DEL CONTEXTO GLOBAL
+  const {
+    session,
+    idTelegram,
+    nickname,
+    currentCycleId,
+    cicloData,
+    gastosRaw,
+    loadingGastos,
+    states,
+    togglePrivacy,
+  } = useAuth();
 
-  // Estados de datos
-  const [gastosRaw, setGastosRaw] = useState([]);
-  const [dataBarras, setDataBarras] = useState([]);
+  // Estados de UI
   const [dataTorta, setDataTorta] = useState([]);
   const [totalMesGasto, setTotalMesGasto] = useState(0);
   const [totalMesIngreso, setTotalMesIngreso] = useState(0);
-
-  // Estados de perfil y UI
-  const [telegramId, setTelegramId] = useState(null);
-  const [nickname, setNickname] = useState(null);
-  const [role, setRole] = useState(null);
-  const [inputID, setInputID] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [totalMesAhorro, setTotalMesAhorro] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
   const añoHoy = new Date().getFullYear();
 
-  const [privateStates, setPrivateStates] = useState(() => {
+  // Configuración de privacidad
+  /*  const [privateStates, setPrivateStates] = useState(() => {
     const saved = JSON.parse(localStorage.getItem("privacySettings"));
     return saved || { total: false, gasto: false, ingreso: false };
   });
-
-  useEffect(() => {
+ */
+  /*   useEffect(() => {
     localStorage.setItem("privacySettings", JSON.stringify(privateStates));
-  }, [privateStates]);
+  }, [privateStates]); */
 
-  const togglePrivacy = (key) => {
-    setPrivateStates((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
+  /*  const togglePrivacy = (key) => {
+    setPrivateStates((prev) => ({ ...prev, [key]: !prev[key] }));
+  }; */
 
+  // 2. PROCESAMIENTO DE DATOS PARA GRÁFICOS
   useEffect(() => {
-    if (session?.user) {
-      checkUserLink();
+    if (gastosRaw.length > 0) {
+      // Totales
+      const sumaG = gastosRaw
+        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
+        .reduce((acc, g) => acc + Number(g.amount || 0), 0);
+      const sumaI = gastosRaw
+        .filter((g) => g.type === "ingreso" && g.ciclo_id === currentCycleId)
+        .reduce((acc, i) => acc + Number(i.amount || 0), 0);
+      const sumaA = gastosRaw
+        .filter((g) => g.type === "ahorro" && g.ciclo_id === currentCycleId)
+        .reduce((acc, i) => acc + Number(i.amount || 0), 0);
+      setTotalMesGasto(sumaG);
+      setTotalMesIngreso(sumaI);
+      setTotalMesAhorro(sumaA);
+
+      // Datos Torta
+      const porCat = gastosRaw
+        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
+        .reduce((acc, g) => {
+          const c = g.category || "Otros";
+          acc[c] = (acc[c] || 0) + Number(g.amount || 0);
+          return acc;
+        }, {});
+      setDataTorta(
+        Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] })),
+      );
     }
-  }, [session]);
+  }, [gastosRaw]);
+
+  // 3. CÁLCULO DE TENDENCIA (BARRAS)
+  const dataLineas = useMemo(() => {
+    const resultados = (gastosRaw || []).reduce((acc, g) => {
+      const fecha = new Date(g.created_at);
+      if (fecha.getFullYear() === añoHoy && g.type === "gasto") {
+        const mesNum = fecha.getMonth() + 1;
+        const existe = acc.find((item) => item.mes === mesNum);
+        if (existe) existe.total += Number(g.amount || 0);
+        else
+          acc.push({
+            mes: mesNum,
+            mesNombre: NOMBRES_MESES[mesNum],
+            total: Number(g.amount || 0),
+          });
+      }
+      return acc;
+    }, []);
+    return resultados.sort((a, b) => a.mes - b.mes);
+  }, [gastosRaw, añoHoy]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -98,109 +142,10 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  async function checkUserLink() {
-    setLoading(true);
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id_telegram")
-        .eq("auth_id", session.user.id)
-        .maybeSingle();
+  // 4. PANTALLAS DE CARGA Y VINCULACIÓN
+  if (loadingGastos && gastosRaw.length === 0) return <Loading />;
 
-      if (profile?.id_telegram) {
-        setTelegramId(profile.id_telegram);
-        const { data: userData } = await supabase
-          .from("users")
-          .select("full_name, role")
-          .eq("id_telegram", profile.id_telegram)
-          .maybeSingle();
-
-        if (userData) {
-          setNickname(userData.full_name);
-          setRole(userData.role);
-        }
-        await fetchExpenses();
-      }
-    } catch (err) {
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchExpenses() {
-    const { data: gastos, error } = await supabase
-      .from("gastos")
-      .select("*")
-      .is("deleted_at", null) // Solo traemos los que NO están eliminados
-      .order("created_at", { ascending: false });
-
-    if (!error && gastos) {
-      setGastosRaw(gastos);
-      processChartData(gastos);
-    }
-  }
-
-  function processChartData(gastos) {
-    // Cálculo de Totales
-    const sumaG = gastos
-      .filter((g) => g.type === "gasto")
-      .reduce((acc, g) => acc + Number(g.amount || g.monto || 0), 0);
-    const sumaI = gastos
-      .filter((g) => g.type === "ingreso")
-      .reduce((acc, i) => acc + Number(i.amount || i.monto || 0), 0);
-    setTotalMesGasto(sumaG);
-    setTotalMesIngreso(sumaI);
-
-    // Datos para Torta
-    const porCat = gastos
-      .filter((g) => g.type === "gasto")
-      .reduce((acc, g) => {
-        const c = g.category || "Otros";
-        acc[c] = (acc[c] || 0) + Number(g.amount || g.monto || 0);
-        return acc;
-      }, {});
-    setDataTorta(
-      Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] })),
-    );
-  }
-
-  // Lógica de procesamiento de meses para el gráfico de barras
-  const infoGrafico = (gastosRaw || []).reduce(
-    (acc, g) => {
-      const fecha = new Date(g.created_at);
-      if (fecha.getFullYear() === añoHoy) {
-        const mesNum = fecha.getMonth() + 1;
-        const existe = acc.resultados.find((item) => item.mes === mesNum);
-        if (existe) existe.total += Number(g.amount || g.monto || 0);
-        else
-          acc.resultados.push({
-            mes: mesNum,
-            mesNombre: NOMBRES_MESES[mesNum],
-            total: Number(g.amount || g.monto || 0),
-          });
-      }
-      return acc;
-    },
-    { resultados: [] },
-  );
-
-  const dataLineas = infoGrafico.resultados.sort((a, b) => a.mes - b.mes);
-
-  async function handleLink() {
-    if (!inputID) return alert("Por favor ingresa tu ID");
-    const { error } = await supabase
-      .from("profiles")
-      .insert([{ auth_id: session.user.id, id_telegram: inputID }]);
-    if (!error) {
-      setTelegramId(inputID);
-      fetchExpenses();
-    } else alert("Error: " + error.message);
-  }
-
-  if (loading) return <Loading />;
-
-  if (!telegramId)
+  if (!idTelegram)
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="card max-w-md w-full text-center shadow-2xl border-t-4 border-indigo-500 p-8">
@@ -226,26 +171,16 @@ export default function Dashboard() {
   return (
     <>
       {/* <Navbar /> */}
+      <CicloBanner ciclo={cicloData} />
       <div className="resumen-container">
         <ResumenCards
-          // Lógica de visualización individual
-          totalMes={
-            privateStates.total
-              ? "********"
-              : (totalMesIngreso - totalMesGasto).toLocaleString("es-CL")
-          }
-          gastoMes={
-            privateStates.gasto
-              ? "********"
-              : totalMesGasto.toLocaleString("es-CL")
-          }
-          ahorroMes={
-            privateStates.ingreso
-              ? "********"
-              : totalMesIngreso.toLocaleString("es-CL")
-          }
-          // Props nuevas para los ojos
-          states={privateStates}
+          // Pasamos los valores numéricos puros (Sin formatear aquí)
+          totalMes={totalMesIngreso - totalMesGasto - totalMesAhorro}
+          gastoMes={totalMesGasto}
+          ingresoMes={totalMesIngreso}
+          ahorroMes={totalMesAhorro}
+          // Usamos los nombres que vienen del AuthContext
+          states={states}
           onToggle={togglePrivacy}
         />
 

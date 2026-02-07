@@ -27,6 +27,16 @@
   font-size: 14px;
 }
 
+.badge-count {
+  color: #f43f5e;
+}
+
+.papelera-header p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
 .papelera-grid {
   display: flex;
   flex-direction: column;

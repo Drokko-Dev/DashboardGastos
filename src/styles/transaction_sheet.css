@@ -1,0 +1,262 @@
+/* Contenedor Base */
+.full-screen-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0a0f18;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh; /* Altura dinámica para evitar que el botón se tape */
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.full-screen-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Header Fijo Estilo Premium */
+.full-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+}
+
+.full-screen-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.header-spacer {
+  width: 40px;
+}
+
+.close-btn {
+  border: none;
+  color: #f87171;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  svg {
+    transition: all 0.3s ease;
+    transform: scale(1.1);
+    color: red;
+  }
+  &:hover {
+    svg {
+      transform: scale(1.2);
+      color: red;
+    }
+  }
+}
+
+/* Cuerpo con Scroll (La clave del problema) */
+.full-screen-body {
+  flex: 1; /* Toma todo el espacio sobrante */
+  overflow-y: auto; /* Habilita el scroll solo aquí */
+  padding: 20px;
+  background: #0e131f;
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+}
+
+/* Selector de Pestañas (Pills) */
+.type-selector-pills-modern {
+  display: flex;
+  background: #1f2937;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 30px;
+}
+
+.pill-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-weight: 700;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.pill-btn.gasto.active {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+.pill-btn.ingreso.active {
+  background: #10b981;
+  color: #ffffff;
+}
+.pill-btn.ahorro.active {
+  background: #00d4ff;
+  color: #ffffff;
+}
+
+.pill-btn.active {
+  background: white;
+  color: black;
+}
+
+/* Bloques de Formulario */
+.input-block {
+  margin-bottom: 24px;
+}
+
+.input-block label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #94a3b9;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.monto-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.monto-input-wrapper .symbol {
+  font-size: 1.5rem;
+  color: #94a3b9;
+  margin-right: 10px;
+}
+
+.monto-input-wrapper input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  font-weight: 800;
+  width: 100%;
+  outline: none;
+}
+
+.input-block textarea,
+.input-block select {
+  width: 100%;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 14px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+}
+
+.char-count {
+  font-size: 10px;
+  color: #94a3b9;
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Tarjeta de Ciclo (Solo ingresos) */
+.special-card-modern {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.special-card-modern strong {
+  display: block;
+  color: #10b981;
+}
+.special-card-modern span {
+  font-size: 0.75rem;
+  color: #6ee7b7;
+}
+
+/* Footer Fijo Abajo */
+.full-screen-footer {
+  padding: 20px;
+  background: #111827;
+  border-top: 1px solid #1f2937;
+  /* padding-bottom: env(
+    safe-area-inset-bottom,
+    20px
+  ); */ /* Evita barrita de gestos */
+}
+
+.btn-main-save {
+  width: 100%;
+  padding: 18px;
+  border-radius: 16px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: white;
+  background: #10b981;
+  transition: transform 0.1s;
+}
+
+.btn-main-save:active {
+  transform: scale(0.97);
+}
+
+/* Colores Dinámicos del Botón */
+.full-screen-container.gasto .btn-main-save {
+  background: #ef4444;
+}
+.full-screen-container.ingreso .btn-main-save {
+  background: #10b981;
+}
+.full-screen-container.ahorro .btn-main-save {
+  background: #00d4ff;
+}
+/* Centrado para pantallas de PC y Tablets grandes */
+@media (min-width: 1201px) {
+  .full-screen-overlay {
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    background: rgba(0, 0, 0, 0.85); /* Fondo semitransparente en PC */
+  }
+
+  .full-screen-container {
+    width: 700px; /* Ancho fijo ideal para formularios */
+    height: 90vh; /* No ocupa todo el alto en PC */
+    border-radius: 24px; /* Bordes redondeados en PC */
+    overflow: hidden; /* Mantiene el header y footer dentro del radio */
+  }
+}
+
+/* Pantallas Medianas / Laptops - AJUSTADO */
+@media (max-width: 1200px) {
+  .full-screen-container {
+    width: 100%;
+    /* Cambia 100vh por 100% para que herede el 100dvh del padre */
+    height: 100%;
+    border-radius: 0;
+  }
+}

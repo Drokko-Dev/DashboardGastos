@@ -20,6 +20,7 @@ import "./styles/navbar.css";
 import "./styles/papelera.css";
 import "./styles/seguridad.css";
 import "./styles/detalle.css";
+import "./styles/resumen_cards.css";
 import { Navbar } from "./components/Navbar";
 
 // COMPONENTE DE RUTA PRIVADA
