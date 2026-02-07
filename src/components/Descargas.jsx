@@ -9,16 +9,23 @@ export const Descargas = () => {
   const prepararPayload = () => {
     const gastosCiclo = gastosRaw.filter((g) => g.ciclo_id === currentCycleId);
 
+    // Forzamos el uso de UTC para que no reste horas y cambie el día
     const fechaInicio = cicloData
-      ? new Date(cicloData.fecha_inicio).toLocaleDateString()
+      ? new Date(cicloData.fecha_inicio).toLocaleDateString("es-ES", {
+          timeZone: "UTC",
+        })
       : "";
+
     const fechaFin = cicloData?.fecha_fin
-      ? new Date(cicloData.fecha_fin).toLocaleDateString()
+      ? new Date(cicloData.fecha_fin).toLocaleDateString("es-ES", {
+          timeZone: "UTC",
+        })
       : "Actualidad";
 
     return {
       movimientos: gastosCiclo,
       titulo: `REPORTE DE CICLO: ${fechaInicio} - ${fechaFin}`,
+      // Para el nombre del archivo reemplazamos las barras por guiones
       fechaInicio: fechaInicio.replace(/\//g, "-"),
     };
   };

@@ -2,10 +2,14 @@ import "../styles/ciclo_banner.css";
 export function CicloBanner({ ciclo }) {
   if (!ciclo) return null;
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("es-CL", {
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("es-ES", {
       day: "numeric",
       month: "short",
+      timeZone: "UTC", // Esto evita que el 28 se convierta en 27
     });
   };
 
