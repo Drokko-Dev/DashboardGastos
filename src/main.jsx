@@ -11,6 +11,7 @@ import { Seguridad } from "./components/Seguridad"; // Nueva
 import Login from "./components/Login";
 import { Sidebar } from "./components/Sidebar"; // El nuevo Sidebar
 import { Loading } from "./components/Loading";
+import { Descargas } from "./components/Descargas";
 
 // ESTILOS
 import "./index.css";
@@ -69,6 +70,15 @@ createRoot(document.getElementById("root")).render(
             element={
               <PrivateRoute>
                 <Detalle />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/descargas"
+            element={
+              <PrivateRoute>
+                <Descargas />
               </PrivateRoute>
             }
           />
