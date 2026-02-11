@@ -56,14 +56,15 @@ function App() {
       />
 
       {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}
-      <Route
+      {/* <Route
         path="/dashboard"
         element={
           <PrivateLayout>
             <Dashboard />
           </PrivateLayout>
         }
-      />
+      /> */}
+      <Route path="/dashboard" element={<Landing />} />
       <Route
         path="/detalle"
         element={
