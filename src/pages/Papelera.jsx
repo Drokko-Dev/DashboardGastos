@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Loading } from "./Loading"; // Usamos tu componente de carga estándar
+import { Loading } from "../components/Loading"; // Usamos tu componente de carga estándar
 
 export function Papelera() {
   // 1. CONSUMO DEL CONTEXTO GLOBAL

@@ -16,9 +16,9 @@ import {
   LabelList,
 } from "recharts";
 import { Link as LinkIcon } from "lucide-react";
-import { ResumenCards } from "./ResumenCards";
-import { Loading } from "./Loading";
-import { CicloBanner } from "./CicloBanner";
+import { ResumenCards } from "../components/ResumenCards";
+import { Loading } from "../components/Loading";
+import { CicloBanner } from "../components/CicloBanner";
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -49,7 +49,7 @@ const NOMBRES_MESES = [
   "Diciembre",
 ];
 
-export default function Dashboard() {
+export function Dashboard() {
   // 1. CONSUMO DEL CONTEXTO GLOBAL
   const {
     session,
