@@ -53,7 +53,6 @@ export function Dashboard() {
   // 1. CONSUMO DEL CONTEXTO GLOBAL
   const {
     session,
-    idTelegram,
     nickname,
     currentCycleId,
     cicloData,
@@ -64,7 +63,6 @@ export function Dashboard() {
     loading,
   } = useAuth();
 
-  // Estados de UI
   const [dataTorta, setDataTorta] = useState([]);
   const [totalMesGasto, setTotalMesGasto] = useState(0);
   const [totalMesIngreso, setTotalMesIngreso] = useState(0);
@@ -72,70 +70,74 @@ export function Dashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const añoHoy = new Date().getFullYear();
 
-  // Configuración de privacidad
-  /*  const [privateStates, setPrivateStates] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem("privacySettings"));
-    return saved || { total: false, gasto: false, ingreso: false };
-  });
- */
-  /*   useEffect(() => {
-    localStorage.setItem("privacySettings", JSON.stringify(privateStates));
-  }, [privateStates]); */
+  // 1. FILTRADO MAESTRO: Solo lo que no está eliminado
+  const gastosActivos = useMemo(() => {
+    return (gastosRaw || []).filter((g) => !g.deleted_at);
+  }, [gastosRaw]);
 
-  /*  const togglePrivacy = (key) => {
-    setPrivateStates((prev) => ({ ...prev, [key]: !prev[key] }));
-  }; */
-
-  // 2. PROCESAMIENTO DE DATOS PARA GRÁFICOS
+  // 2. PROCESAMIENTO DE DATOS PARA CARDS Y TORTA
   useEffect(() => {
-    if (gastosRaw.length > 0) {
-      // Totales
-      const sumaG = gastosRaw
-        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
+    if (gastosActivos.length >= 0) {
+      // Filtrar por el ciclo actual para los totales de las cards
+      const gastosCiclo = gastosActivos.filter(
+        (g) => g.ciclo_id === currentCycleId && g.test !== true,
+      );
+
+      const sumaG = gastosCiclo
+        .filter((g) => g.type === "gasto")
         .reduce((acc, g) => acc + Number(g.amount || 0), 0);
-      const sumaI = gastosRaw
-        .filter((g) => g.type === "ingreso" && g.ciclo_id === currentCycleId)
+
+      const sumaI = gastosCiclo
+        .filter((g) => g.type === "ingreso")
         .reduce((acc, i) => acc + Number(i.amount || 0), 0);
-      const sumaA = gastosRaw
-        .filter((g) => g.type === "ahorro" && g.ciclo_id === currentCycleId)
+
+      const sumaA = gastosCiclo
+        .filter((g) => g.type === "ahorro")
         .reduce((acc, i) => acc + Number(i.amount || 0), 0);
+
       setTotalMesGasto(sumaG);
       setTotalMesIngreso(sumaI);
       setTotalMesAhorro(sumaA);
 
-      // Datos Torta
-      const porCat = gastosRaw
-        .filter((g) => g.type === "gasto" && g.ciclo_id === currentCycleId)
+      // Datos Torta (Usando gastosActivos del ciclo)
+      const porCat = gastosCiclo
+        .filter((g) => g.type === "gasto")
         .reduce((acc, g) => {
           const c = g.category || "Otros";
           acc[c] = (acc[c] || 0) + Number(g.amount || 0);
           return acc;
         }, {});
+
       setDataTorta(
         Object.keys(porCat).map((c) => ({ name: c, value: porCat[c] })),
       );
     }
-  }, [gastosRaw]);
+  }, [gastosActivos, currentCycleId]);
 
-  // 3. CÁLCULO DE TENDENCIA (BARRAS)
+  // 3. CÁLCULO DE TENDENCIA (BARRAS ANUALES)
   const dataLineas = useMemo(() => {
-    const resultados = (gastosRaw || []).reduce((acc, g) => {
-      const fecha = new Date(g.created_at);
+    const resultados = gastosActivos.reduce((acc, g) => {
+      // Aquí usamos created_at para ver la tendencia de todo el año
+      const fecha = new Date(g.date);
+
       if (fecha.getFullYear() === añoHoy && g.type === "gasto") {
         const mesNum = fecha.getMonth() + 1;
         const existe = acc.find((item) => item.mes === mesNum);
-        if (existe) existe.total += Number(g.amount || 0);
-        else
+        if (existe) {
+          existe.total += Number(g.amount || 0);
+        } else {
           acc.push({
             mes: mesNum,
             mesNombre: NOMBRES_MESES[mesNum],
             total: Number(g.amount || 0),
           });
+        }
       }
       return acc;
     }, []);
+
     return resultados.sort((a, b) => a.mes - b.mes);
-  }, [gastosRaw, añoHoy]);
+  }, [gastosActivos, añoHoy]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

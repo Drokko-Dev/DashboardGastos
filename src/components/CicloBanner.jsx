@@ -20,8 +20,8 @@ export function CicloBanner({ ciclo }) {
           <div className="ciclo-left">
             <span className="ciclo-dot"></span>
             <span className="ciclo-dates">
-              {formatDate(ciclo.fecha_inicio)} —{" "}
-              {ciclo.fecha_fin ? formatDate(ciclo.fecha_fin) : "Hoy"}
+              {formatDate(ciclo.start_date)} —{" "}
+              {ciclo.end_date ? formatDate(ciclo.end_date) : "Hoy"}
             </span>
           </div>
 

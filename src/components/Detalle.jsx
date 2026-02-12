@@ -183,24 +183,32 @@ export function Detalle() {
 
       let cicloIdFinal = profile.current_cycle_id;
 
-      // LÓGICA DE REINICIO DE CICLO
+      // --- LÓGICA DE REINICIO DE CICLO (v1.1.2) ---
       if (type === "ingreso" && reiniciarCiclo) {
+        // Usamos el timestamp completo para precisión en Chile
+        const ahoraISO = new Date().toISOString();
+
         if (profile.current_cycle_id) {
+          // 1. Cerramos el ciclo anterior usando los nombres de columna correctos
           await supabase
             .from("ciclos")
-            .update({ estado: false, fecha_fin: createdAtLocal })
+            .update({
+              is_active: false, // Antes era 'estado'
+              end_date: ahoraISO, // Antes era 'fecha_fin'
+            })
             .eq("id", profile.current_cycle_id);
         }
 
+        // 2. Insertamos el nuevo ciclo con tus columnas: name, start_date, budget, is_active
         const { data: nuevoCiclo, error: errC } = await supabase
           .from("ciclos")
           .insert([
             {
-              user_id: profile.id, // Vinculado al UUID del usuario
-              nombre: descripcion.trim(),
-              monto_inicial: montoNumerico,
-              fecha_inicio: createdAtLocal,
-              estado: true,
+              user_id: profile.id,
+              name: descripcion.trim(), // Antes era 'nombre'
+              budget: montoNumerico, // Antes era 'monto_inicial'
+              start_date: ahoraISO, // Antes era 'fecha_inicio'
+              is_active: true, // Antes era 'estado'
             },
           ])
           .select()
@@ -209,6 +217,7 @@ export function Detalle() {
         if (errC) throw errC;
         cicloIdFinal = nuevoCiclo.id;
 
+        // 3. Actualizamos el puntero en el perfil
         await supabase
           .from("profiles")
           .update({ current_cycle_id: cicloIdFinal })
