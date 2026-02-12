@@ -82,28 +82,35 @@ export function Detalle() {
 
   // 1. LÓGICA DE FILTRADO REACTIVA
   const movimientosAMostrar = useMemo(() => {
+    // Primero, filtramos SOLO los que NO están eliminados
+    const soloActivos = gastosRaw.filter((g) => !g.deleted_at);
+
     if (vistaModo === "mes") {
-      const mesActual = new Date().getMonth() + 1;
-      const anioActual = new Date().getFullYear();
-      return gastosRaw.filter(
-        (g) => g.month === mesActual && g.year === anioActual,
-      );
+      const ahora = new Date();
+      const mesActual = ahora.getMonth();
+      const anioActual = ahora.getFullYear();
+
+      return soloActivos.filter((g) => {
+        const fechaMov = new Date(g.date);
+        return (
+          fechaMov.getMonth() === mesActual &&
+          fechaMov.getFullYear() === anioActual
+        );
+      });
     } else {
-      // Filtrar por ciclo: Buscamos el registro marcado como sueldo
-      /* const CicloActual = gastosRaw.find((g) => g.ciclo_id === currentCycleId); */
-      if (!currentCycleId) return gastosRaw;
-      return gastosRaw.filter((g) => g.ciclo_id === currentCycleId);
+      // Para el modo ciclo
+      if (!currentCycleId) return soloActivos;
+      return soloActivos.filter((g) => g.ciclo_id === currentCycleId);
     }
-  }, [gastosRaw, vistaModo]);
+  }, [gastosRaw, vistaModo, currentCycleId]);
 
   // 2. LÓGICA DE AGRUPAMIENTO REACTIVA
   const grupos = useMemo(() => {
     return movimientosAMostrar.reduce((grupos, mov) => {
-      // Extraemos la fecha directamente del string YYYY-MM-DD para evitar el desfase de horas
-      // Esto asegura que si en la base dice 30, el encabezado diga 30
-      const [year, month, day] = mov.created_at.split("T")[0].split("-");
-      const fechaObj = new Date(year, month - 1, day); // Meses en JS son 0-11
+      // 1. Convertimos el ISO almacenado a un objeto Date (esto ya considera Chile)
+      const fechaObj = new Date(mov.date);
 
+      // 2. Creamos el encabezado (Ej: "20 de mayo de 2024")
       const fechaFormateada = fechaObj.toLocaleDateString("es-CL", {
         day: "numeric",
         month: "long",
@@ -115,7 +122,9 @@ export function Detalle() {
       }
 
       grupos[fechaFormateada].items.push(mov);
+
       const montoNum = Number(mov.amount || 0);
+      // Sumamos si es ingreso, restamos si es gasto o ahorro
       grupos[fechaFormateada].subtotal +=
         mov.type === "ingreso" ? montoNum : -montoNum;
 
@@ -147,247 +156,164 @@ export function Detalle() {
     localStorage.setItem("preferencia_vista", vistaModo);
   }, [vistaModo]);
 
-  async function fetchExpenses() {
-    const { data: gastos, error } = await supabase
-      .from("gastos")
-      .select("*")
-      .is("deleted_at", null) // Solo traemos los que NO están eliminados
-      .order("created_at", { ascending: false });
-
-    if (!error && gastos) {
-      setGastosRaw(gastos);
-    }
-  }
-
-  // Funcion para insertar datos en la base
+  // --- 1. FUNCIÓN PARA GUARDAR (Adaptada a Multi-usuario y tabla 'transacciones') ---
   async function handleSave() {
     if (!type) return alert("Selecciona Gasto o Ingreso");
     if (!descripcion) return alert("Falta la descripción");
     const montoNumerico = Number(monto);
 
     if (!monto || isNaN(montoNumerico) || montoNumerico <= 0) {
-      setToast({
-        show: true,
-        message: "⚠️ El monto debe ser un número válido",
-        type: "error",
-      });
-      setTimeout(() => setToast({ show: false }), 3000);
+      setToast({ show: true, message: "⚠️ Monto inválido", type: "error" });
       return;
     }
-    console.log("🚀 ENVIANDO A SUPABASE:", {
-      tipo_seleccionado: type,
-      categoria_original: categoria,
-      /* categoria_final: categoriaFinal, */
-    });
 
     try {
-      // 1. EXTRAEMOS DATOS DEL CONTEXTO (idTelegram viene de useAuth)
-      // Primero validamos el ciclo actual del perfil en tiempo real para seguridad
-      const { data: profile } = await supabase
+      // Usamos el id de la sesión para obtener el perfil actualizado
+      const { data: profile, error: errorProf } = await supabase
         .from("profiles")
-        .select("current_cycle_id")
-        .eq("id_telegram", idTelegram) // idTelegram ya lo tenemos global
+        .select("id, current_cycle_id, telegram_id")
+        .eq("id", session.user.id)
         .single();
 
+      if (errorProf) throw errorProf;
+
       const ahora = new Date();
-      const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
-      const descripcionFinal =
-        descripcion.trim().length > 60
-          ? descripcion.trim().substring(0, 57) + "..."
-          : descripcion.trim();
+      const createdAtISO = ahora.toISOString();
+      const fechaSQL = ahora.toLocaleDateString("en-CA");
 
       let cicloIdFinal = profile.current_cycle_id;
 
-      // 2. LÓGICA DE REINICIO DE CICLO (Triple Acción de BI)
+      // LÓGICA DE REINICIO DE CICLO
       if (type === "ingreso" && reiniciarCiclo) {
-        // A. Cerrar ciclo actual
-        await supabase
-          .from("ciclos")
-          .update({ estado: false, fecha_fin: createdAtLocal })
-          .eq("id", profile.current_cycle_id);
+        if (profile.current_cycle_id) {
+          await supabase
+            .from("ciclos")
+            .update({ estado: false, fecha_fin: createdAtLocal })
+            .eq("id", profile.current_cycle_id);
+        }
 
-        // B. Crear nuevo ciclo y capturar su ID
-        const { data: cicloNuevo, error: errorCiclo } = await supabase
+        const { data: nuevoCiclo, error: errC } = await supabase
           .from("ciclos")
           .insert([
             {
-              id_telegram: idTelegram,
-              nombre: descripcionFinal,
-              estado: true,
+              user_id: profile.id, // Vinculado al UUID del usuario
+              nombre: descripcion.trim(),
               monto_inicial: montoNumerico,
               fecha_inicio: createdAtLocal,
+              estado: true,
             },
           ])
           .select()
           .single();
 
-        if (errorCiclo) throw errorCiclo;
-        cicloIdFinal = cicloNuevo.id;
+        if (errC) throw errC;
+        cicloIdFinal = nuevoCiclo.id;
 
-        // C. Vincular Perfil al Nuevo Ciclo
         await supabase
           .from("profiles")
           .update({ current_cycle_id: cicloIdFinal })
-          .eq("id_telegram", idTelegram);
+          .eq("id", profile.id);
       }
 
-      // 3. INSERTAR EL MOVIMIENTO FINAL
-      const { error: errorGasto } = await supabase.from("gastos").insert([
-        {
-          origin: "web",
-          amount: montoNumerico,
-          description_user: descripcionFinal,
-          description_telegram: descripcionFinal,
-          category: categoria,
-          type: type,
-          id_telegram: idTelegram,
-          user: nickname, // Viene del contexto
-          date: ahora.toISOString().split("T")[0],
-          day: ahora.getDate(),
-          month: ahora.getMonth() + 1,
-          year: ahora.getFullYear(),
-          created_at: createdAtLocal,
-          ciclo_id: cicloIdFinal, // Vinculación garantizada
-          is_sueldo: type === "ingreso" && reiniciarCiclo,
-        },
-      ]);
+      // INSERTAR EN LA TABLA 'transacciones'
+      const { error: errG } = await supabase
+        .from("transacciones") // <--- TABLA ACTUALIZADA
+        .insert([
+          {
+            user_id: profile.id, // Dueño del registro
+            ciclo_id: cicloIdFinal,
+            amount: montoNumerico,
+            category: categoria,
+            description_user: descripcion.trim(),
+            type: type,
+            origin: "web",
+            id_telegram: profile.telegram_id,
+            date: createdAtISO,
+            created_at: createdAtISO,
+            is_sueldo: type === "ingreso" && reiniciarCiclo,
+          },
+        ]);
 
-      if (errorGasto) throw errorGasto;
+      if (errG) throw errG;
 
-      // 4. FEEDBACK Y REFRESCO GLOBAL
-      setShowModal(false);
       setToast({
         show: true,
-        message: reiniciarCiclo
-          ? "¡Nuevo Ciclo Iniciado! 🚀"
-          : "¡Movimiento guardado! ✅",
+        message: reiniciarCiclo ? "¡Ciclo Reiniciado! 🚀" : "¡Guardado! ✅",
         type: "success",
       });
-
-      // Reset de estados locales
+      setTimeout(() => setToast({ show: false }), 3000);
+      setShowModal(false);
       setMonto("");
       setDescripcion("");
       setReiniciarCiclo(false);
-      setType("gasto");
-
-      // RECARGA INSTANTÁNEA: Actualiza la lista global en el Contexto
       await refreshGastos();
-
-      setTimeout(() => setToast({ show: false, message: "" }), 3000);
     } catch (err) {
-      console.error("Error completo:", err);
-      alert("No se pudo completar la operación");
+      console.error("Error:", err);
+      setToast({ show: true, message: "Error: " + err.message, type: "error" });
+      setTimeout(() => setToast({ show: false }), 3000);
     }
   }
-
-  //Funcion para Eliminar datos de la base
-
-  // Paso 1: Abrir el modal y guardar el ID
   const confirmDelete = (id) => {
+    console.log("Abriendo modal para ID:", id); // Para debug en consola
     setSelectedId(id);
     setShowDeleteModal(true);
   };
 
-  // Paso 2: Ejecutar el soft delete
+  // --- 2. FUNCIÓN PARA ELIMINAR (Soft Delete en 'transacciones') ---
   async function executeDelete() {
     try {
       const ahora = new Date();
-      const createdAtLocal = ahora.toLocaleString("sv-SE").replace(" ", "T");
+      const deletedAtISO = ahora.toISOString();
 
       const { error } = await supabase
-        .from("gastos")
-        .update({ deleted_at: createdAtLocal }) // Marcamos como eliminado
-        .eq("id", selectedId);
+        .from("transacciones") // <--- TABLA ACTUALIZADA
+        .update({ deleted_at: deletedAtISO })
+        .eq("id", selectedId)
+        .eq("user_id", session.user.id); // Seguridad: Solo el dueño borra
 
       if (error) throw error;
 
-      // 1. FEEDBACK VISUAL
       setToast({
         show: true,
-        message: "Movimiento movido a la papelera 🗑️",
+        message: "Movido a la papelera 🗑️",
         type: "success",
       });
+      setTimeout(() => setToast({ show: false }), 3000);
       setShowDeleteModal(false);
-
-      // 2. LA CLAVE: Sincronización Global
-      // Reemplazamos fetchExpenses() por refreshGastos() del contexto
       await refreshGastos();
-
-      setTimeout(() => {
-        setToast({ show: false, message: "" });
-      }, 3000);
     } catch (err) {
-      setToast({ show: true, message: "Error al procesar ❌", type: "error" });
-      console.error("Error al eliminar:", err);
+      console.error(err);
+      setToast({ show: true, message: "Error al eliminar", type: "error" });
+      setTimeout(() => setToast({ show: false }), 3000);
     }
   }
-  // Ejecutar Actualizar
+
+  // --- 3. FUNCIÓN PARA ACTUALIZAR (En 'transacciones') ---
   async function handleUpdate() {
-    // 1. Validación de descripción
-    if (!editingGasto.description_user.trim()) {
-      setToast({
-        show: true,
-        message: "⚠️ La descripción no puede estar vacía",
-        type: "error",
-      });
-      setTimeout(() => setToast({ show: false }), 3000);
-      return;
-    }
-
-    // 2. Validación de monto
+    if (!editingGasto.description_user.trim()) return;
     const montoNumerico = Number(editingGasto.amount);
-    if (!editingGasto.amount || isNaN(montoNumerico) || montoNumerico === 0) {
-      setToast({
-        show: true,
-        message: "⚠️ Ingresa un monto válido",
-        type: "error",
-      });
-      setTimeout(() => setToast({ show: false }), 3000);
-      return;
-    }
-
-    // 3. Procesamiento de texto (Límite de 60 caracteres)
-    const descripcionFinal =
-      editingGasto.description_user.trim().length > 60
-        ? editingGasto.description_user.trim().substring(0, 57) + "..."
-        : editingGasto.description_user.trim();
 
     try {
-      // 4. Actualización en Supabase
       const { error } = await supabase
-        .from("gastos")
+        .from("transacciones") // <--- TABLA ACTUALIZADA
         .update({
           amount: montoNumerico,
-          description_user: descripcionFinal,
-          description_telegram: descripcionFinal,
+          description_user: editingGasto.description_user.trim(),
           category: editingGasto.category,
         })
-        .eq("id", editingGasto.id);
+        .eq("id", editingGasto.id)
+        .eq("user_id", session.user.id); // Seguridad
 
       if (error) throw error;
 
-      // 5. Feedback de éxito
       setEditingGasto(null);
-      setToast({
-        show: true,
-        message: "¡Movimiento actualizado! ✨",
-        type: "success",
-      });
-
-      // LA CLAVE: Sincronización Global
-      // Reemplazamos fetchExpenses() por la función del Contexto
+      setToast({ show: true, message: "¡Actualizado! ✨", type: "success" });
+      setTimeout(() => setToast({ show: false }), 3000);
       await refreshGastos();
     } catch (err) {
-      console.error("Error al actualizar:", err);
-      setToast({
-        show: true,
-        message: "❌ Error: No se pudo actualizar el registro",
-        type: "error",
-      });
-    } finally {
-      setTimeout(() => {
-        setToast({ show: false, message: "", type: "" });
-      }, 3000);
+      console.error(err);
+      setToast({ show: true, message: "Error al actualizar", type: "error" });
+      setTimeout(() => setToast({ show: false }), 3000);
     }
   }
 
@@ -629,6 +555,12 @@ export function Detalle() {
                       if (type === "gasto") return "#ef4444"; // Rojo para gasto
                       return "#36d35d"; // Verde para ingreso
                     };
+                    const fechaObjeto = new Date(g.date);
+                    const horaChile = fechaObjeto.toLocaleTimeString("es-CL", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    });
 
                     return (
                       <article className="ticket-card" key={g.id}>
@@ -648,9 +580,7 @@ export function Detalle() {
                         </button>
 
                         {/* HORA DEL REGISTRO */}
-                        <p className="fecha-registro">
-                          {g.created_at.split("T")[1].slice(0, 5)} hrs
-                        </p>
+                        <p className="fecha-registro">{horaChile} hrs</p>
 
                         <p className="descripcion-texto">
                           {g.description_user || "Sin descripción"}

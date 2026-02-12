@@ -1,7 +1,7 @@
 import "../styles/logo.css";
-
+import { version } from "../assets/version";
 export function Logo() {
-  const APP_VERSION = "1.1.0";
+  const APP_VERSION = version; // Usamos la versión de package.json
   return (
     <h1 className="brand-title">
       <svg

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-
+import { version } from "../assets/version";
 const settings = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +75,7 @@ const DownloadIcon = (
     <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 11l5 5l5 -5M12 4v12" />
   </svg>
 );
-const APP_VERSION = "1.1.0";
+
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { session, nickname, role } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -107,7 +107,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
           >
             <h1>
               {svgLogo} FinanceTracker{" "}
-              <span className="app-version-tag">v{APP_VERSION}</span>
+              <span className="app-version-tag">v{version}</span>
             </h1>
           </Link>
 

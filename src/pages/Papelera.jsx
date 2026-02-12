@@ -1,30 +1,29 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Loading } from "../components/Loading"; // Usamos tu componente de carga estándar
+import { Loading } from "../components/Loading";
+import { RotateCcw, Trash2 } from "lucide-react"; // Usamos iconos pro
 
 export function Papelera() {
-  // 1. CONSUMO DEL CONTEXTO GLOBAL
-  const { session, idTelegram, authLoading, refreshGastos } = useAuth();
+  const { session, authLoading, refreshGastos } = useAuth();
   const [papelera, setPapelera] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
-  // Carga inicial al detectar la sesión y el ID de Telegram
   useEffect(() => {
-    if (!authLoading && idTelegram) {
+    // Si la sesión está lista, cargamos por User ID
+    if (!authLoading && session?.user?.id) {
       fetchTrash();
     }
-  }, [idTelegram, authLoading]);
+  }, [session, authLoading]);
 
-  // 2. FUNCIÓN DE CARGA FILTRADA POR USUARIO
   async function fetchTrash() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("gastos")
+        .from("transacciones") // Cambiado a transacciones
         .select("*")
-        .eq("id_telegram", idTelegram) // Filtro de seguridad BI
+        .eq("user_id", session.user.id) // Filtro maestro por UUID de Auth
         .not("deleted_at", "is", null)
         .order("deleted_at", { ascending: false });
 
@@ -37,20 +36,17 @@ export function Papelera() {
     }
   }
 
-  // 3. RESTAURACIÓN CON SINCRONIZACIÓN GLOBAL
   async function handleRestore(id) {
     try {
       const { error } = await supabase
-        .from("gastos")
+        .from("transacciones")
         .update({ deleted_at: null })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", session.user.id); // Seguridad extra
 
       if (error) throw error;
 
-      // Actualizamos la lista local de la papelera
       await fetchTrash();
-
-      // NOTIFICAMOS AL CONTEXTO GLOBAL: Esto actualiza el Dashboard y Detalle
       await refreshGastos();
 
       setToast({
@@ -61,11 +57,9 @@ export function Papelera() {
       setTimeout(() => setToast({ show: false, message: "" }), 3000);
     } catch (err) {
       console.error("Error al restaurar:", err);
-      alert("No se pudo restaurar el movimiento");
     }
   }
 
-  // Pantalla de carga para el S24
   if (authLoading || (loading && papelera.length === 0)) {
     return <Loading />;
   }
@@ -73,84 +67,62 @@ export function Papelera() {
   return (
     <>
       {toast.show && (
-        <div
-          className="toast-notification"
-          style={
-            toast.type === "success"
-              ? {
-                  backgroundColor: "#064e3b",
-                  color: "#3ec016",
-                  border: "1px solid #119605",
-                }
-              : {
-                  backgroundColor: "#4e0606ad",
-                  color: "#c01616",
-                  border: "1px solid #960505",
-                }
-          }
-        >
+        <div className={`toast-notification ${toast.type}`}>
           {toast.message}
         </div>
       )}
+
       <div className="papelera-page">
         <header className="papelera-header">
           <h1>
-            Papelera Reciente {/* Contador dinámico */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="icon-trash"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M4 7l16 0" />
-              <path d="M10 11l0 6" />
-              <path d="M14 11l0 6" />
-              <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-              <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-            </svg>
+            Papelera <Trash2 size={24} className="icon-trash" />
           </h1>
           <p>
             Tienes <span className="badge-count">({papelera.length})</span>{" "}
-            movimientos que pueden ser restaurados a tus reportes.
+            movimientos que pueden ser restaurados.
           </p>
         </header>
 
         <div className="papelera-grid">
           {papelera.length === 0 ? (
-            <p className="empty-msg">La papelera está vacía.</p>
+            <div className="empty-state">
+              <p className="empty-msg">Tu papelera está limpia.</p>
+            </div>
           ) : (
-            papelera.map((g) => (
-              <article className="papelera-item" key={g.id}>
-                <div className="item-main">
-                  <span className="item-date">
-                    Eliminado: {g.deleted_at?.split("T")[0]}{" "}
-                    {g.deleted_at?.split("T")[1].slice(0, 5)}
-                  </span>
-                  <h2 className="item-desc">{g.description_user}</h2>
-                  <span className="item-cat">{g.category}</span>
-                </div>
+            papelera.map((g) => {
+              // Lógica de fecha para Chile
+              const fechaEliminado = new Date(g.deleted_at);
+              const fechaFmt = fechaEliminado.toLocaleDateString("es-CL");
+              const horaFmt = fechaEliminado.toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
 
-                <div className="item-side">
-                  <span className="item-amount">
-                    ${Number(g.amount).toLocaleString("es-CL")}
-                  </span>
-                  <button
-                    onClick={() => handleRestore(g.id)}
-                    className="btn-restore-circle"
-                    title="Restaurar"
-                  >
-                    🔄
-                  </button>
-                </div>
-              </article>
-            ))
+              return (
+                <article className="papelera-item" key={g.id}>
+                  <div className="item-main">
+                    <span className="item-date">
+                      Eliminado: {fechaFmt} a las {horaFmt} hrs
+                    </span>
+                    <h2 className="item-desc">{g.description_user}</h2>
+                    <span className="item-cat">{g.category}</span>
+                  </div>
+
+                  <div className="item-side">
+                    <span className={`item-amount ${g.type}`}>
+                      ${Number(g.amount).toLocaleString("es-CL")}
+                    </span>
+                    <button
+                      onClick={() => handleRestore(g.id)}
+                      className="btn-restore-circle"
+                      title="Restaurar"
+                    >
+                      <RotateCcw size={18} />
+                    </button>
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
       </div>

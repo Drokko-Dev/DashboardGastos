@@ -432,7 +432,7 @@ export function Dashboard() {
               return (
                 <article className="ticket-card" key={g.id}>
                   <p className="fecha-registro">
-                    {g.created_at.replace("T", " ").slice(0, 16)}
+                    {g.date.replace("T", " ").slice(0, 16)}
                   </p>
                   <p className="descripcion-texto">
                     {g.description_user || "Sin descripción"}
