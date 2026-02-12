@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-
+import { version } from "../assets/version";
 const settings = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -59,6 +59,23 @@ const svgLogo = (
   </svg>
 );
 
+const DownloadIcon = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-download"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" />
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 11l5 5l5 -5M12 4v12" />
+  </svg>
+);
+
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { session, nickname, role } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -88,7 +105,10 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               alignItems: "center",
             }}
           >
-            <h1>{svgLogo} FinanceTracker</h1>
+            <h1>
+              {svgLogo} FinanceTracker{" "}
+              <span className="app-version-tag">v{version}</span>
+            </h1>
           </Link>
 
           <button className="close-sidebar" onClick={toggleSidebar}>
@@ -154,6 +174,17 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <path d="M4 12v6c0 1.657 3.582 3 8 3 .352 0 .698-.009 1.037-.025M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3H17M19 21v1m0-8v1" />
               </svg>
               Movimientos
+            </h1>
+          </NavLink>
+
+          <NavLink
+            to="/descargas"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
+            <h1>
+              {DownloadIcon}
+              Descargas
             </h1>
           </NavLink>
 
@@ -234,7 +265,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             {showProfileMenu && (
               <div className="sidebar-profile-dropdown">
                 <NavLink
-                  to="/seguridad"
+                  to="/profile"
                   onClick={toggleSidebar}
                   className="dropdown-item item-conf"
                 >

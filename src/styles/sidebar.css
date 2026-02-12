@@ -25,7 +25,7 @@
   position: fixed;
   top: 0;
   right: -100%;
-  width: 280px;
+  width: 320px;
   height: 100dvh; /* Altura dinámica siempre */
   background-color: #1a1a1a;
   border-left: 1px solid #2e2e2e;

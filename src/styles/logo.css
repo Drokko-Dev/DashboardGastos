@@ -21,6 +21,20 @@
   }
 }
 
+.app-version-tag {
+  font-size: 0.55rem; /* Super pequeño */
+  background: rgba(99, 102, 241, 0.15); /* Fondo suave del color del logo */
+  color: #818cf8;
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  align-self: flex-start; /* La sube un poquito para que parezca un superíndice */
+  margin-top: 2px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
 @media (max-width: 768px) {
   .brand-title {
     font-size: 1.7rem;
