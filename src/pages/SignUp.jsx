@@ -2,34 +2,44 @@ import React, { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
-import "../styles/pages/Login/login.css"; // Ruta a tu nuevo CSS
+import "../styles/pages/Login/login.css"; // Reutilizamos el CSS del Login para consistencia
 
-export default function Login() {
+export const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        // Importante: Esto envía el nombre al trigger de la DB
+        data: {
+          full_name: fullName,
+        },
+      },
     });
 
     if (error) {
       alert("Error: " + error.message);
     } else {
-      navigate("/dashboard");
+      alert(
+        "¡Registro exitoso! Por favor, revisa tu correo para confirmar la cuenta.",
+      );
+      navigate("/login");
     }
     setLoading(false);
   };
 
   return (
     <div className="auth-screen">
-      {/* Orbs de fondo exclusivos para el login */}
+      {/* Orbs de fondo */}
       <div className="login-orbs">
         <div className="l-orb l-orb-1"></div>
         <div className="l-orb l-orb-2"></div>
@@ -39,13 +49,24 @@ export default function Login() {
         <div className="login-card">
           <header className="login-header">
             <Logo />
-            <h1>Bienvenido de nuevo</h1>
-            <p>Ingresa tus datos para gestionar tus ciclos</p>
+            <h1>Crea tu cuenta</h1>
+            <p>Únete y empieza a dominar tus finanzas</p>
           </header>
 
-          <form onSubmit={handleLogin} className="login-form">
+          <form onSubmit={handleSignUp} className="login-form">
             <div className="field">
-              <label>Email</label>
+              <label>Nombre Completo</label>
+              <input
+                type="text"
+                placeholder="Ej: Juan Pérez"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label>Correo Electrónico</label>
               <input
                 type="email"
                 placeholder="nombre@ejemplo.com"
@@ -59,7 +80,7 @@ export default function Login() {
               <label>Contraseña</label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -67,16 +88,16 @@ export default function Login() {
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? "Verificando..." : "Entrar al Dashboard"}
+              {loading ? "Creando cuenta..." : "Registrarme ahora"}
             </button>
           </form>
 
           <footer className="login-footer">
-            <span>¿Aún no tienes cuenta?</span>
-            <Link to="/signup">Crea una ahora</Link>
+            <span>¿Ya tienes una cuenta?</span>
+            <Link to="/login">Inicia sesión aquí</Link>
           </footer>
         </div>
       </div>
     </div>
   );
-}
+};

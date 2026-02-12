@@ -1,6 +1,7 @@
 import "../styles/logo.css";
 
 export function Logo() {
+  const APP_VERSION = "1.1.0";
   return (
     <h1 className="brand-title">
       <svg
@@ -39,6 +40,7 @@ export function Logo() {
         </g>
       </svg>
       FinanceTracker
+      <span className="app-version-tag">v{APP_VERSION}</span>
     </h1>
   );
 }

@@ -40,18 +40,17 @@ export const AuthProvider = ({ children }) => {
     setLoadingGastos(true);
     try {
       const { data, error } = await supabase
-        .from("gastos")
+        .from("transacciones") // <--- CAMBIADO
         .select("*")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        // .is("deleted_at", null) // Asegúrate de tener esta columna o quítala si da error
+        .order("date", { ascending: false });
 
       if (!error && data) {
         setGastosRaw(data);
-        // Guardamos en cache local para la próxima apertura instantánea
         localStorage.setItem("gastos_cache", JSON.stringify(data));
       }
     } catch (err) {
-      console.error("Error cargando movimientos globales:", err);
+      console.error("Error cargando movimientos:", err);
     } finally {
       setLoadingGastos(false);
     }
@@ -59,47 +58,33 @@ export const AuthProvider = ({ children }) => {
 
   // 2. FUNCIÓN PARA CARGAR PERFIL
   async function fetchUserProfile(userId) {
+    setLoading(true); // <--- Nos aseguramos de que el loading esté activo
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id_telegram, current_cycle_id")
-        .eq("auth_id", userId)
+        .select("full_name, telegram_id, current_cycle_id")
+        .eq("id", userId)
         .maybeSingle();
 
-      if (profile?.id_telegram) {
-        setIdTelegram(profile.id_telegram);
-        const { data: userData } = await supabase
-          .from("users")
-          .select("full_name, role")
-          .eq("id_telegram", profile.id_telegram)
-          .maybeSingle();
+      if (profile) {
+        setNickname(profile.full_name || "Usuario");
+        setIdTelegram(profile.telegram_id);
+        setCurrentCycleId(profile.current_cycle_id);
 
-        if (userData) {
-          setNickname(userData.full_name);
-          setRole(userData.role);
-          setCurrentCycleId(profile.current_cycle_id);
-        }
-
-        // 2. BUSCAMOS EL CICLO COMPLETO (La clave del cambio)
+        // Si hay ciclo, esperamos a que cargue también
         if (profile.current_cycle_id) {
           const { data: cicloInfo } = await supabase
             .from("ciclos")
             .select("*")
             .eq("id", profile.current_cycle_id)
             .maybeSingle();
-
-          if (cicloInfo) {
-            setCicloData(cicloInfo); // Ahora todo el dashboard sabe las fechas
-            setCurrentCycleId(profile.current_cycle_id);
-          }
+          if (cicloInfo) setCicloData(cicloInfo);
         }
-
-        // Una vez que tenemos el perfil, cargamos los gastos automáticamente
-        refreshGastos();
       }
     } catch (err) {
-      console.error("Error cargando perfil global:", err);
+      console.error("Error:", err);
     } finally {
+      // SOLO AQUÍ apagamos el loading, cuando ya tenemos TODO
       setLoading(false);
     }
   }

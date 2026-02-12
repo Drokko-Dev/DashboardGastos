@@ -61,6 +61,7 @@ export function Dashboard() {
     loadingGastos,
     states,
     togglePrivacy,
+    loading,
   } = useAuth();
 
   // Estados de UI
@@ -145,28 +146,11 @@ export function Dashboard() {
   // 4. PANTALLAS DE CARGA Y VINCULACIÓN
   if (loadingGastos && gastosRaw.length === 0) return <Loading />;
 
-  if (!idTelegram)
-    return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <div className="card max-w-md w-full text-center shadow-2xl border-t-4 border-indigo-500 p-8">
-          <LinkIcon className="text-indigo-600 mx-auto mb-6" size={40} />
-          <h2 className="text-2xl font-black mb-4">Vincular Telegram</h2>
-          <input
-            type="text"
-            value={inputID}
-            onChange={(e) => setInputID(e.target.value)}
-            placeholder="Pega tu ID aquí..."
-            className="w-full p-4 border-2 rounded-2xl mb-6 text-center text-xl outline-none"
-          />
-          <button
-            onClick={handleLink}
-            className="btn-primary w-full py-4 text-lg"
-          >
-            Comenzar
-          </button>
-        </div>
-      </div>
-    );
+  // Si está cargando el perfil inicial, NO muestres el panel rápido
+  if (loading) return <Loading />;
+
+  // Si no hay sesión después de cargar, podrías redirigir o mostrar login
+  if (!session) return <p>Inicia sesión para continuar</p>;
 
   return (
     <>

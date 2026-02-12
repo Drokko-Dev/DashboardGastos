@@ -11,6 +11,8 @@ import Login from "./pages/Login";
 import { Loading } from "./components/Loading";
 import { Navbar } from "./components/Navbar";
 import { Landing } from "./pages/Landing";
+import { SignUp } from "./pages/SignUp";
+import { Profile } from "./pages/Profile";
 
 // ESTILOS (Solo los globales aquí)
 import "./index.css";
@@ -55,16 +57,21 @@ function App() {
         element={!session ? <Login /> : <Navigate to="/dashboard" />}
       />
 
+      <Route
+        path="/signup"
+        element={!session ? <SignUp /> : <Navigate to="/dashboard" />}
+      />
+
       {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}
-      {/* <Route
+      <Route
         path="/dashboard"
         element={
           <PrivateLayout>
             <Dashboard />
           </PrivateLayout>
         }
-      /> */}
-      <Route path="/dashboard" element={<Landing />} />
+      />
+      {/* <Route path="/dashboard" element={<Landing />} /> */}
       <Route
         path="/detalle"
         element={
@@ -94,6 +101,14 @@ function App() {
         element={
           <PrivateLayout>
             <Seguridad />
+          </PrivateLayout>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateLayout>
+            <Profile />
           </PrivateLayout>
         }
       />
