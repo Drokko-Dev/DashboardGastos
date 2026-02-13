@@ -266,10 +266,36 @@
 
   /* --- CARACTERÍSTICAS (Grid) --- */
   .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 30px;
     padding: 100px 10%;
+  }
+  /* Título de la sección (Forzamos que ocupe toda la fila) */
+  .title-features {
+    grid-column: 1 / -1; /* Ocupa desde la primera a la última columna */
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+  }
+
+  /* Subtítulo opcional (puedes agregarlo en el HTML) */
+  .subtitle-features {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: -15px;
+    margin-bottom: 40px;
+    font-size: 1.1rem;
+  }
+
+  .feature-cards-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
   }
 
   .feature-card {
@@ -396,5 +422,128 @@
     .btn-sidebar {
       font-size: 1.2rem;
     }
+  }
+}
+
+/* --- SECCIÓN: QUÉ SON LOS CICLOS --- */
+.section-que-son {
+  padding: 100px 10% 40px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.ciclos-info-header h2 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.highlight {
+  color: var(--accent-teal);
+  /* Efecto de brillo suave en el texto */
+  text-shadow: 0 0 20px rgba(8, 175, 190, 0.3);
+}
+
+.ciclos-info-header p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 850px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* --- SECCIÓN: CÓMO FUNCIONAN --- */
+.section-como-funcionan {
+  padding: 60px 10% 100px;
+  position: relative;
+  z-index: 1;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.title-center {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 60px;
+  color: var(--text-main);
+}
+
+.pasos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.paso-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 45px 35px;
+  border-radius: 32px;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.paso-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--accent-teal);
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.paso-icon-box {
+  color: var(--accent-teal);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.step-number {
+  font-size: 0.85rem;
+  background: rgba(8, 175, 190, 0.15);
+  color: var(--accent-teal);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-weight: 800;
+  border: 1px solid rgba(8, 175, 190, 0.3);
+}
+
+.paso-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.paso-card p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .section-que-son {
+    padding: 80px 6% 30px;
+  }
+  .section-como-funcionan {
+    padding: 40px 6% 80px;
+  }
+  .ciclos-info-header p {
+    font-size: 1.1rem;
+  }
+  .paso-card {
+    padding: 35px 25px;
+  }
+  .title-center {
+    font-size: 1.8rem;
+    margin-bottom: 40px;
   }
 }

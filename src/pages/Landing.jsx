@@ -1,14 +1,41 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import {
+  Target,
+  RefreshCw,
+  BarChart3,
+  Wallet,
+  CheckCircle2,
+} from "lucide-react";
 import "../styles/pages/Landing/landing.css";
 import { Logo } from "../components/Logo";
 export const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const toggleMenu = () => setMenuOpen(!menuOpen);
-
+  const pasosCiclo = [
+    {
+      icon: <Wallet size={32} />,
+      title: "Inicia con tu Ingreso",
+      text: "Al registrar tu sueldo, activas un nuevo ciclo. Esto establece tu presupuesto real desde el día 1.",
+    },
+    {
+      icon: <Target size={32} />,
+      title: "Seguimiento Inteligente",
+      text: "Cada gasto se resta de tu presupuesto activo, dándote una visión clara de cuánto te queda disponible.",
+    },
+    {
+      icon: <RefreshCw size={32} />,
+      title: "Cierre y Reinicio",
+      text: "¿Llegó el próximo sueldo? Cierra el ciclo actual y comienza uno nuevo con la pizarra limpia.",
+    },
+    {
+      icon: <BarChart3 size={32} />,
+      title: "Análisis Comparativo",
+      text: "Compara ciclos anteriores para entender tus patrones de gasto y mejorar tu capacidad de ahorro.",
+    },
+  ];
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
@@ -129,31 +156,76 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* NUEVA SECCIÓN: ¿QUÉ SON LOS CICLOS? */}
+      <section className="section-que-son">
+        <div className="ciclos-info-header">
+          <h2>
+            ¿Qué son los <span className="highlight">Ciclos</span>?
+          </h2>
+          <p>
+            Es la libertad de ignorar el calendario tradicional. En lugar de
+            medir tus gastos forzosamente del 1 al 30, los mides de{" "}
+            <strong>sueldo a sueldo</strong>. Es la forma más natural de
+            entender tu flujo de caja personal.
+          </p>
+        </div>
+      </section>
+
+      {/* NUEVA SECCIÓN: ¿CÓMO FUNCIONAN? (Grid de pasos) */}
+      <section className="section-como-funcionan">
+        <h2 className="title-center">¿Cómo funcionan?</h2>
+        <div className="pasos-grid">
+          {pasosCiclo.map((paso, index) => (
+            <div key={index} className="paso-card">
+              <div className="paso-icon-box">
+                {paso.icon}
+                <span className="step-number">{index + 1}</span>
+              </div>
+              <h3>{paso.title}</h3>
+              <p>{paso.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* FEATURES (Las que ya tenías pero con mejor estilo) */}
       <section id="features" className="features-grid">
-        <div className="feature-card">
-          <div className="f-icon">📄</div>
-          <h3>Reportes Pro</h3>
-          <p>
-            Exporta movimientos en Excel y PDF con un diseño limpio y listo para
-            contabilidad.
+        {/* Título y Subtítulo */}
+        <div>
+          <h2 className="title-features">Potencia tu estrategia</h2>
+          <p className="subtitle-features">
+            Herramientas diseñadas para darte claridad y rapidez en cada
+            registro.
           </p>
         </div>
-        <div className="feature-card">
-          <div className="f-icon">🤖</div>
-          <h3>Bot de Telegram</h3>
-          <p>
-            Registra gastos por texto sin siquiera abrir la web. Sincronización
-            instantánea. <strong>(Proximamente por voz)</strong>
-          </p>
-        </div>
-        <div className="feature-card">
-          <div className="f-icon">🔒</div>
-          <h3>Privacidad Total</h3>
-          <p>
-            Tus datos están encriptados y organizados para que solo tú tengas el
-            control.
-          </p>
+        {/* Tarjetas */}
+        <div className="feature-cards-group">
+          <div className="feature-card">
+            <div className="f-icon">📄</div>
+            <h3>Reportes Pro</h3>
+            <p>
+              Exporta movimientos en Excel y PDF con un diseño limpio y listo
+              para contabilidad.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="f-icon">🤖</div>
+            <h3>Bot de Telegram</h3>
+            <p>
+              Registra gastos por texto sin abrir la web. Sincronización
+              instantánea. <strong>(Próximamente voz)</strong>
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="f-icon">🔒</div>
+            <h3>Privacidad Total</h3>
+            <p>
+              Tus datos están encriptados y vinculados a tu cuenta personal de
+              forma segura.
+            </p>
+          </div>
         </div>
       </section>
 
