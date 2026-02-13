@@ -1,15 +1,15 @@
 .soporte-section {
   padding: 120px 10% 80px;
   text-align: center;
-}
 
-.text-gradient {
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: var(--primary2);
-  font-size: 2.1rem;
-  font-weight: bold;
-  margin-bottom: 20px;
+  .text-gradient {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--primary2);
+    font-size: 2.1rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
 }
 
 .soporte-subtitle {

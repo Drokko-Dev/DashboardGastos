@@ -13,6 +13,7 @@ import { Navbar } from "./components/Navbar";
 import { Landing } from "./pages/Landing/Landing";
 import { SignUp } from "./pages/SignUp";
 import { Profile } from "./pages/Profile";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 // ESTILOS (Solo los globales aquí)
 import "./index.css";
@@ -48,112 +49,115 @@ const PrivateLayout = ({ children }) => {
 function App() {
   const { session } = useAuth();
   return (
-    <Routes>
-      {/* RUTA RAÍZ: Si no hay sesión, ve la Landing. Si hay, va al Dashboard */}
-      <Route
-        path="/"
-        element={
-          !session ? (
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* RUTA RAÍZ: Si no hay sesión, ve la Landing. Si hay, va al Dashboard */}
+        <Route
+          path="/"
+          element={
+            !session ? (
+              <PublicLayout>
+                <Landing />
+              </PublicLayout>
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          }
+        />
+
+        <Route
+          path="/sobre-nosotros"
+          element={
             <PublicLayout>
-              <Landing />
+              <SobreNosotros />
             </PublicLayout>
-          ) : (
-            <Navigate to="/dashboard" />
-          )
-        }
-      />
+          }
+        />
+        <Route
+          path="/terminos-y-condiciones"
+          element={
+            <PublicLayout>
+              <Terms />
+            </PublicLayout>
+          }
+        />
 
-      <Route
-        path="/sobre-nosotros"
-        element={
-          <PublicLayout>
-            <SobreNosotros />
-          </PublicLayout>
-        }
-      />
-      <Route
-        path="/terminos-y-condiciones"
-        element={
-          <PublicLayout>
-            <Terms />
-          </PublicLayout>
-        }
-      />
+        <Route
+          path="/soporte"
+          element={
+            <PublicLayout>
+              <Soporte />
+            </PublicLayout>
+          }
+        />
 
-      <Route
-        path="/soporte"
-        element={
-          <PublicLayout>
-            <Soporte />
-          </PublicLayout>
-        }
-      />
+        {/* RUTA PÚBLICA DE LOGIN */}
+        <Route
+          path="/login"
+          element={!session ? <Login /> : <Navigate to="/dashboard" />}
+        />
 
-      {/* RUTA PÚBLICA DE LOGIN */}
-      <Route
-        path="/login"
-        element={!session ? <Login /> : <Navigate to="/dashboard" />}
-      />
+        <Route
+          path="/signup"
+          element={!session ? <SignUp /> : <Navigate to="/dashboard" />}
+        />
 
-      <Route
-        path="/signup"
-        element={!session ? <SignUp /> : <Navigate to="/dashboard" />}
-      />
+        {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateLayout>
+              <Dashboard />
+            </PrivateLayout>
+          }
+        />
+        {/* <Route path="/dashboard" element={<Landing />} /> */}
+        <Route
+          path="/detalle"
+          element={
+            <PrivateLayout>
+              <Detalle />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/descargas"
+          element={
+            <PrivateLayout>
+              <Descargas />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/papelera"
+          element={
+            <PrivateLayout>
+              <Papelera />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/seguridad"
+          element={
+            <PrivateLayout>
+              <Seguridad />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateLayout>
+              <Profile />
+            </PrivateLayout>
+          }
+        />
 
-      {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateLayout>
-            <Dashboard />
-          </PrivateLayout>
-        }
-      />
-      {/* <Route path="/dashboard" element={<Landing />} /> */}
-      <Route
-        path="/detalle"
-        element={
-          <PrivateLayout>
-            <Detalle />
-          </PrivateLayout>
-        }
-      />
-      <Route
-        path="/descargas"
-        element={
-          <PrivateLayout>
-            <Descargas />
-          </PrivateLayout>
-        }
-      />
-      <Route
-        path="/papelera"
-        element={
-          <PrivateLayout>
-            <Papelera />
-          </PrivateLayout>
-        }
-      />
-      <Route
-        path="/seguridad"
-        element={
-          <PrivateLayout>
-            <Seguridad />
-          </PrivateLayout>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <PrivateLayout>
-            <Profile />
-          </PrivateLayout>
-        }
-      />
-
-      {/* REDIRECCIÓN GLOBAL */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+        {/* REDIRECCIÓN GLOBAL */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </>
   );
 }
 

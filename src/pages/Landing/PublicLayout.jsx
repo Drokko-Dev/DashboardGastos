@@ -1,56 +1,43 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import {
-  Target,
-  RefreshCw,
-  BarChart3,
-  Wallet,
-  CheckCircle2,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import "/src/styles/pages/Landing/landing.css";
-import "/src/styles/pages/Landing/footer.css";
+import { Link, useLocation } from "react-router-dom";
+
 import { Logo } from "../../components/Logo";
+
+import "/src/styles/pages/Landing/public_layout.css";
+
 export const PublicLayout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const toggleMenu = () => setMenuOpen(!menuOpen);
-  const pasosCiclo = [
-    {
-      icon: <Wallet size={32} />,
-      title: "Inicia con tu Ingreso",
-      text: "Al registrar tu sueldo, activas un nuevo ciclo. Esto establece tu presupuesto real desde el día 1.",
-    },
-    {
-      icon: <Target size={32} />,
-      title: "Seguimiento Inteligente",
-      text: "Cada gasto se resta de tu presupuesto activo, dándote una visión clara de cuánto te queda disponible.",
-    },
-    {
-      icon: <RefreshCw size={32} />,
-      title: "Cierre y Reinicio",
-      text: "¿Llegó el próximo sueldo? Cierra el ciclo actual y comienza uno nuevo, todo en un click.",
-    },
-    {
-      icon: <BarChart3 size={32} />,
-      title: "Análisis Comparativo",
-      text: "Compara ciclos anteriores para entender tus patrones de gasto y mejorar tu capacidad de ahorro.",
-    },
-  ];
+  const { pathname } = useLocation();
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  const revealVariant = {
-    hidden: { opacity: 0, y: 50 }, // Empieza invisible y 50px abajo
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: "easeOut" },
-    },
-  };
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [menuOpen]);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth", // Para que suba con una animación suave
+    });
+  }, [pathname]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setMenuOpen(false); // <--- Esto cierra el menú al navegar
+  }, [pathname]);
 
   return (
     <div className="landing-container">
@@ -62,16 +49,21 @@ export const PublicLayout = ({ children }) => {
       </div>
       {/* SIDEBAR MÓVIL (DESDE ARRIBA) */}
       {isMobile ? (
-        <aside className={`sidebar-mobile ${menuOpen ? "open" : ""}`}>
-          <nav className="sidebar-nav">
-            <Link to="/login" className="btn-sidebar" onClick={toggleMenu}>
-              Iniciar Sesión
-            </Link>
-            <Link to="/signup" className="btn-sidebar" onClick={toggleMenu}>
-              Crear mi cuenta ahora
-            </Link>
-          </nav>
-        </aside>
+        <>
+          {menuOpen && (
+            <div className="sidebar-overlay" onClick={toggleMenu}></div>
+          )}
+          <aside className={`sidebar-mobile ${menuOpen ? "open" : ""}`}>
+            <nav className="sidebar-nav">
+              <Link to="/login" className="btn-sidebar" onClick={toggleMenu}>
+                Iniciar Sesión
+              </Link>
+              <Link to="/signup" className="btn-sidebar" onClick={toggleMenu}>
+                Crear mi cuenta ahora
+              </Link>
+            </nav>
+          </aside>
+        </>
       ) : (
         <></>
       )}
@@ -79,7 +71,11 @@ export const PublicLayout = ({ children }) => {
       {/* NAVBAR PREMIUM */}
       <nav className="landing-nav">
         <div className="logo-container">
-          <Link to="/" className="logo-link">
+          <Link
+            to="/"
+            className="logo-link"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
             <Logo />
           </Link>
         </div>

@@ -10,12 +10,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import "/src/styles/pages/Landing/landing.css";
-import "/src/styles/pages/Landing/footer.css";
-import { Logo } from "../../components/Logo";
+
 export const Landing = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const toggleMenu = () => setMenuOpen(!menuOpen);
   const pasosCiclo = [
     {
       icon: <Wallet size={32} />,
@@ -38,11 +34,7 @@ export const Landing = () => {
       text: "Compara ciclos anteriores para entender tus patrones de gasto y mejorar tu capacidad de ahorro.",
     },
   ];
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+
   const revealVariant = {
     hidden: { opacity: 0, y: 50 }, // Empieza invisible y 50px abajo
     visible: {
@@ -101,10 +93,9 @@ export const Landing = () => {
             <li>✅ Reportes automáticos al cerrar cada ciclo.</li>
           </ul>
         </div>
-        <div className="ciclos-visual">
-          {/* Aquí podrías poner una captura de tu Dashboard real */}
+        {/* <div className="ciclos-visual">
           <div className="mockup-screen"></div>
-        </div>
+        </div> */}
       </motion.section>
       {/* NUEVA SECCIÓN: ¿QUÉ SON LOS CICLOS? */}
       <motion.section
