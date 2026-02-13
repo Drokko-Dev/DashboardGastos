@@ -20,7 +20,7 @@
 
   /* --- FONDO ANIMADO (ORBS) --- */
   .bg-animation {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -32,39 +32,48 @@
     position: absolute;
     border-radius: 50%;
     filter: blur(100px);
-    opacity: 0.2;
-    animation: float 20s infinite alternate ease-in-out;
+    opacity: 0.25; /* Un pelín más de opacidad para que se noten */
+    /* Animación más orgánica */
+    animation: float-parallax 25s infinite alternate ease-in-out;
   }
   .orb-1 {
-    width: 500px;
-    height: 500px;
+    width: 600px;
+    height: 600px;
     background: var(--primary);
-    top: -10%;
+    top: 5%;
     left: -10%;
   }
+
   .orb-2 {
-    width: 400px;
-    height: 400px;
+    width: 500px;
+    height: 500px;
     background: var(--accent-teal);
-    bottom: -5%;
+    top: 40%; /* Aparecerá cuando vayas por la sección de Ciclos */
     right: -5%;
     animation-delay: -5s;
   }
+
   .orb-3 {
-    width: 300px;
-    height: 300px;
+    width: 400px;
+    height: 400px;
     background: #4f46e5;
-    top: 30%;
-    left: 20%;
+    top: 75%; /* Aparecerá cerca de las Features */
+    left: 15%;
     animation-delay: -10s;
   }
 
-  @keyframes float {
-    from {
-      transform: translate(0, 0);
+  @keyframes float-parallax {
+    0% {
+      transform: translate(0, 0) scale(1);
     }
-    to {
-      transform: translate(60px, 80px);
+    33% {
+      transform: translate(50px, 100px) scale(1.1);
+    }
+    66% {
+      transform: translate(-30px, 50px) scale(0.9);
+    }
+    100% {
+      transform: translate(0, 0) scale(1);
     }
   }
 
@@ -270,6 +279,11 @@
     flex-direction: column;
     gap: 30px;
     padding: 100px 10%;
+    background: linear-gradient(
+      to bottom,
+      var(--bg-card) 0%,
+      var(--bg-dark) 100%
+    );
   }
   /* Título de la sección (Forzamos que ocupe toda la fila) */
   .title-features {
@@ -431,6 +445,11 @@
   text-align: center;
   position: relative;
   z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-dark) 0%,
+    var(--bg-card) 100%
+  );
 }
 
 .ciclos-info-header h2 {
@@ -459,7 +478,8 @@
   padding: 60px 10% 100px;
   position: relative;
   z-index: 1;
-  background: var(--bg-card);
+  background: radial-gradient(circle at center, #1e293b 0%, var(--bg-card) 80%);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
 }
@@ -546,4 +566,87 @@
     font-size: 1.8rem;
     margin-bottom: 40px;
   }
+}
+
+/* --- AJUSTES DE ARMONÍA GENERAL --- */
+.section-ciclos,
+.section-que-son,
+.section-como-funcionan,
+.features-grid {
+  border: none !important; /* Eliminamos bordes divisorios de sección */
+}
+
+/* --- HERO SECTION --- */
+.hero-section {
+  text-align: center;
+  padding: 120px 10% 80px;
+  background: radial-gradient(
+    circle at top,
+    rgba(99, 102, 241, 0.1) 0%,
+    transparent 70%
+  );
+}
+
+/* --- SECCIÓN CICLOS (Valor diferencial) --- */
+.section-ciclos {
+  display: flex;
+  align-items: center;
+  padding: 100px 10%;
+  gap: 60px;
+  background: var(--bg-dark); /* Fondo limpio antes de entrar a las cards */
+}
+
+/* --- SECCIÓN QUÉ SON (Degradado de entrada) --- */
+.section-que-son {
+  padding: 100px 10% 60px;
+  text-align: center;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-dark) 0%,
+    var(--bg-card) 100%
+  );
+}
+
+/* --- SECCIÓN CÓMO FUNCIONAN (Punto focal) --- */
+.section-como-funcionan {
+  padding: 80px 10% 120px;
+  background: var(--bg-card);
+  /* Sutil resplandor en el fondo */
+  background: radial-gradient(
+    circle at center,
+    rgba(8, 175, 190, 0.03) 0%,
+    var(--bg-card) 100%
+  );
+}
+
+/* --- FEATURES GRID (Degradado de salida) --- */
+.features-grid {
+  display: flex;
+  flex-direction: column;
+  padding: 100px 10%;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-card) 0%,
+    var(--bg-dark) 100%
+  );
+}
+
+.feature-cards-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+/* --- CARDS PREMIUM (Bordes más finos) --- */
+.paso-card,
+.feature-card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Borde casi invisible */
+  backdrop-filter: blur(5px);
+}
+
+.paso-card:hover,
+.feature-card:hover {
+  border-color: var(--accent-teal);
+  background: rgba(8, 175, 190, 0.05);
 }

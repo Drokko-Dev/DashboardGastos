@@ -10,7 +10,7 @@ import { Descargas } from "./pages/Descargas";
 import Login from "./pages/Login";
 import { Loading } from "./components/Loading";
 import { Navbar } from "./components/Navbar";
-import { Landing } from "./pages/Landing";
+import { Landing } from "./pages/Landing/Landing";
 import { SignUp } from "./pages/SignUp";
 import { Profile } from "./pages/Profile";
 
@@ -23,6 +23,10 @@ import "./styles/papelera.css";
 import "./styles/seguridad.css";
 import "./styles/detalle.css";
 import "./styles/resumen_cards.css";
+import { SobreNosotros } from "./pages/Landing/SobreNosotros";
+import { PublicLayout } from "./pages/Landing/PublicLayout";
+import { Terms } from "./pages/Landing/Terms";
+import { Soporte } from "./pages/Landing/Soporte";
 
 // Un sub-componente para envolver rutas protegidas
 const PrivateLayout = ({ children }) => {
@@ -48,7 +52,41 @@ function App() {
       {/* RUTA RAÍZ: Si no hay sesión, ve la Landing. Si hay, va al Dashboard */}
       <Route
         path="/"
-        element={!session ? <Landing /> : <Navigate to="/dashboard" />}
+        element={
+          !session ? (
+            <PublicLayout>
+              <Landing />
+            </PublicLayout>
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+      />
+
+      <Route
+        path="/sobre-nosotros"
+        element={
+          <PublicLayout>
+            <SobreNosotros />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="/terminos-y-condiciones"
+        element={
+          <PublicLayout>
+            <Terms />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/soporte"
+        element={
+          <PublicLayout>
+            <Soporte />
+          </PublicLayout>
+        }
       />
 
       {/* RUTA PÚBLICA DE LOGIN */}

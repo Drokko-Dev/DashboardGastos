@@ -8,8 +8,10 @@ import {
   Wallet,
   CheckCircle2,
 } from "lucide-react";
-import "../styles/pages/Landing/landing.css";
-import { Logo } from "../components/Logo";
+import { motion } from "framer-motion";
+import "/src/styles/pages/Landing/landing.css";
+import "/src/styles/pages/Landing/footer.css";
+import { Logo } from "../../components/Logo";
 export const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -28,7 +30,7 @@ export const Landing = () => {
     {
       icon: <RefreshCw size={32} />,
       title: "Cierre y Reinicio",
-      text: "¿Llegó el próximo sueldo? Cierra el ciclo actual y comienza uno nuevo con la pizarra limpia.",
+      text: "¿Llegó el próximo sueldo? Cierra el ciclo actual y comienza uno nuevo, todo en un click.",
     },
     {
       icon: <BarChart3 size={32} />,
@@ -41,81 +43,25 @@ export const Landing = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  const revealVariant = {
+    hidden: { opacity: 0, y: 50 }, // Empieza invisible y 50px abajo
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: "easeOut" },
+    },
+  };
+
   return (
-    <div className="landing-container">
-      {/* FONDO DINÁMICO DE ORBS */}
-      <div className="bg-animation">
-        <div className="orb orb-1"></div>
-        <div className="orb orb-2"></div>
-        <div className="orb orb-3"></div>
-      </div>
-      {/* SIDEBAR MÓVIL (DESDE ARRIBA) */}
-      {isMobile ? (
-        <aside className={`sidebar-mobile ${menuOpen ? "open" : ""}`}>
-          <nav className="sidebar-nav">
-            <Link to="/login" className="btn-sidebar" onClick={toggleMenu}>
-              Iniciar Sesión
-            </Link>
-            <Link to="/signup" className="btn-sidebar" onClick={toggleMenu}>
-              Crear mi cuenta ahora
-            </Link>
-          </nav>
-        </aside>
-      ) : (
-        <></>
-      )}
-
-      {/* NAVBAR PREMIUM */}
-      <nav className="landing-nav">
-        <div className="logo-container">
-          <Logo />
-        </div>
-        <div className="nav-actions">
-          <Link to="/login" className="link-secondary">
-            Iniciar Sesión
-          </Link>
-          {isMobile ? (
-            <button className="menu-toggle" onClick={toggleMenu}>
-              {menuOpen ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={24}
-                  height={24}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  className="icon icon-tabler icons-tabler-outline icon-tabler-x close-icon"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" />
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={24}
-                  height={24}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  className="icon icon-tabler icons-tabler-outline icon-tabler-menu-2 menu-icon"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" />
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          ) : (
-            <></>
-          )}
-        </div>
-      </nav>
-
+    <>
       {/* HERO SECTION */}
-      <header className="hero-section">
+      <motion.header
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={revealVariant}
+        className="hero-section"
+      >
         <div className="badge">Beta Abierta — En Desarrollo</div>
         <h1>
           Toma el control total de{" "}
@@ -130,10 +76,15 @@ export const Landing = () => {
             Crear mi cuenta ahora
           </Link>
         </div>
-      </header>
-
+      </motion.header>
       {/* SECCIÓN DE CICLOS (Tu valor diferencial) */}
-      <section className="section-ciclos">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={revealVariant}
+        className="section-ciclos"
+      >
         <div className="ciclos-content">
           <h2>
             Adiós a los meses cerrados, <br />
@@ -154,10 +105,15 @@ export const Landing = () => {
           {/* Aquí podrías poner una captura de tu Dashboard real */}
           <div className="mockup-screen"></div>
         </div>
-      </section>
-
+      </motion.section>
       {/* NUEVA SECCIÓN: ¿QUÉ SON LOS CICLOS? */}
-      <section className="section-que-son">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={revealVariant}
+        className="section-que-son"
+      >
         <div className="ciclos-info-header">
           <h2>
             ¿Qué son los <span className="highlight">Ciclos</span>?
@@ -169,27 +125,47 @@ export const Landing = () => {
             entender tu flujo de caja personal.
           </p>
         </div>
-      </section>
-
+      </motion.section>
       {/* NUEVA SECCIÓN: ¿CÓMO FUNCIONAN? (Grid de pasos) */}
+
       <section className="section-como-funcionan">
-        <h2 className="title-center">¿Cómo funcionan?</h2>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="title-center"
+        >
+          ¿Cómo funcionan?
+        </motion.h2>
         <div className="pasos-grid">
           {pasosCiclo.map((paso, index) => (
-            <div key={index} className="paso-card">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.2 }} // Efecto cascada
+              viewport={{ once: true }}
+              className="paso-card"
+            >
               <div className="paso-icon-box">
                 {paso.icon}
                 <span className="step-number">{index + 1}</span>
               </div>
               <h3>{paso.title}</h3>
               <p>{paso.text}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* FEATURES (Las que ya tenías pero con mejor estilo) */}
-      <section id="features" className="features-grid">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={revealVariant}
+        className="features-grid"
+        id="features"
+      >
         {/* Título y Subtítulo */}
         <div>
           <h2 className="title-features">Potencia tu estrategia</h2>
@@ -227,21 +203,22 @@ export const Landing = () => {
             </p>
           </div>
         </div>
-      </section>
-
+      </motion.section>
       {/* COMING SOON / ROADMAP */}
-      <section className="roadmap-banner">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={revealVariant}
+        className="roadmap-banner"
+      >
         <h3>🚀 Evolucionando para ti</h3>
         <p>
           Estamos trabajando en: <strong>Presupuestos por Categoría</strong>,{" "}
           <strong>Metas de Ahorro</strong> e{" "}
           <strong>Inteligencia Artificial</strong> para detectar gastos hormiga.
         </p>
-      </section>
-
-      <footer className="landing-footer">
-        <p>© 2026 FinanceTracker. Claridad financiera a un clic.</p>
-      </footer>
-    </div>
+      </motion.section>
+    </>
   );
 };

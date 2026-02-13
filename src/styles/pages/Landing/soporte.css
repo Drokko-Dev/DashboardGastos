@@ -1,0 +1,108 @@
+.soporte-section {
+  padding: 120px 10% 80px;
+  text-align: center;
+}
+
+.text-gradient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--primary2);
+  font-size: 2.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.soporte-subtitle {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  margin-bottom: 60px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.soporte-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 80px;
+}
+
+.soporte-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 40px;
+  border-radius: 32px;
+  transition: transform 0.3s ease;
+}
+
+.soporte-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--primary);
+}
+
+.highlight-card {
+  border: 1px solid var(--primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.soporte-icon-box {
+  color: var(--accent-teal);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--primary);
+  color: white;
+  padding: 12px 25px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  margin-top: 20px;
+}
+
+.link-soporte {
+  color: var(--accent-teal);
+  font-weight: 600;
+  text-decoration: none;
+  display: block;
+  margin-top: 20px;
+}
+
+/* FAQ STYLES */
+.faq-section {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.faq-grid {
+  display: grid;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.faq-item h4 {
+  color: var(--text-main);
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.faq-item p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .soporte-grid {
+    grid-template-columns: 1fr;
+  }
+  .soporte-section {
+    padding: 100px 5% 40px;
+  }
+}
