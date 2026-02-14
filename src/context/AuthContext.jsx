@@ -150,6 +150,7 @@ export const AuthProvider = ({ children }) => {
         refreshGastos,
         states,
         togglePrivacy,
+        fetchUserProfile,
         /* vistaModo,
         setVistaModo, */
       }}
