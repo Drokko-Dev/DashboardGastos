@@ -15,9 +15,9 @@
 /* Esta clase se activa vía React cuando el menú está abierto */
 .no-scroll {
   overflow: hidden !important;
-  height: 100dvh !important;
-  position: fixed;
-  width: 100%;
+  /* Al quitar position: fixed, el body se queda en su lugar 
+     y no salta hacia arriba al abrir el sidebar */
+  touch-action: none; /* Opcional: Refuerza el bloqueo en móviles */
 }
 
 /* --- ESTILO DEL SIDEBAR (Escritorio y Base) --- */
@@ -79,27 +79,37 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px; /* Un poco más apretado para que quepa todo */
   height: 100%;
+  align-items: flex-start; /* Fuerza todo a la izquierda */
 }
 
 .sidebar-nav a {
-  padding: 14px 18px;
+  width: 100%; /* Ocupa todo el ancho disponible */
+  padding: 12px 16px;
   color: #94a3b8;
   text-decoration: none;
   border-radius: 12px;
   font-weight: 500;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-nav a h1 {
   display: flex;
-  gap: 10px;
-  font-size: 18px;
   align-items: center;
+  gap: 12px; /* Espacio perfecto entre icono y texto */
+  font-size: 16px; /* Tamaño ideal para lectura */
   margin: 0;
+  font-weight: 500;
+  width: 100%;
+  justify-content: flex-start; /* Icono y texto al inicio */
 }
 
+.sidebar-nav a svg {
+  flex-shrink: 0; /* Evita que el icono se achique */
+}
 .sidebar-nav .sidebar-item-page.active {
   background: linear-gradient(to right, #6366f1, #07c3e4);
   color: white;

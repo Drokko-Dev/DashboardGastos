@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { useEffect } from "react";
 
 // COMPONENTES / PÁGINAS
 import { Dashboard } from "./pages/Dashboard";
@@ -14,7 +15,8 @@ import { Landing } from "./pages/Landing/Landing";
 import { SignUp } from "./pages/SignUp";
 import { Profile } from "./pages/Profile";
 import { ScrollToTop } from "./components/ScrollToTop";
-
+import { Ayuda } from "./pages/Sidebar/Ayuda";
+import { GuiaUso } from "./pages/Sidebar/GuiaUso";
 // ESTILOS (Solo los globales aquí)
 import "./index.css";
 import "./styles/add_transaction.css";
@@ -32,6 +34,18 @@ import { Soporte } from "./pages/Landing/Soporte";
 // Un sub-componente para envolver rutas protegidas
 const PrivateLayout = ({ children }) => {
   const { session, loading } = useAuth();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Solo reseteamos el scroll de la ventana global y el contenedor
+    // Este efecto solo se dispara cuando el STRING de pathname cambia.
+    window.scrollTo(0, 0);
+
+    const mainContent = document.querySelector(".main-content");
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+  }, [pathname]); // <--- Pathname es un string, abrir el sidebar no lo cambia.
 
   if (loading) return <Loading />;
   if (!session) return <Navigate to="/login" />;
@@ -40,7 +54,9 @@ const PrivateLayout = ({ children }) => {
     <>
       <Navbar />
       <div className="app-layout">
-        <div className="main-content">{children}</div>
+        {/* IMPORTANTE: Quitamos la 'key={pathname}' del <main> si estaba causando 
+            que todo el componente se destruyera al abrir el sidebar */}
+        <main className="main-content">{children}</main>
       </div>
     </>
   );
@@ -150,6 +166,31 @@ function App() {
           element={
             <PrivateLayout>
               <Profile />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/ayuda"
+          element={
+            <PrivateLayout>
+              <Ayuda />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/privacidad-config"
+          element={
+            <PrivateLayout>
+              <Terms /> {/* Reutilizamos el mismo componente */}
+            </PrivateLayout>
+          }
+        />
+
+        <Route
+          path="/guia-uso"
+          element={
+            <PrivateLayout>
+              <GuiaUso />
             </PrivateLayout>
           }
         />

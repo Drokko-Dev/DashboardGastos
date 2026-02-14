@@ -7,14 +7,19 @@
 }
 
 .descargas-container h1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  background: linear-gradient(to right, #6366f1, #07c3e4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 8px;
+  text-align: center;
 }
 
 .descargas-container p {
   color: #94a3b8;
+  text-align: center;
   margin-bottom: 32px;
 }
 

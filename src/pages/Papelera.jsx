@@ -74,9 +74,7 @@ export function Papelera() {
 
       <div className="papelera-page">
         <header className="papelera-header">
-          <h1>
-            Papelera <Trash2 size={24} className="icon-trash" />
-          </h1>
+          <h1>Registros Eliminados</h1>
           <p>
             Tienes <span className="badge-count">({papelera.length})</span>{" "}
             movimientos que pueden ser restaurados.

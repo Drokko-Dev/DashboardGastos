@@ -1,0 +1,228 @@
+/* --- CONTENEDOR PRINCIPAL --- */
+.guia-container {
+  padding: 20px;
+  max-width: 850px;
+  margin: 0 auto;
+  color: #e2e8f0;
+  padding-bottom: 100px; /* Espacio para no chocar con el scroll */
+}
+
+/* --- HEADER --- */
+.guia-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.guia-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.guia-header p {
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+/* --- CUERPO DE LA GUÍA --- */
+.guia-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.guia-section {
+  background: #1a1a1a;
+  border: 1px solid #2e2e2e;
+  padding: 24px;
+  border-radius: 20px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.guia-section:hover {
+  border-color: #475569;
+}
+
+/* Títulos internos de sección */
+.guia-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 16px;
+}
+
+.guia-title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Párrafos de texto */
+.guia-section p {
+  line-height: 1.6;
+  color: #cbd5e1;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+/* --- CAJA DE EJEMPLO (CICLOS) --- */
+.guia-box {
+  background: rgba(8, 175, 190, 0.08);
+  border-left: 4px solid #08afbe;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+/* Estilo para la lista explicativa de puntos */
+.guia-list-explicativa {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Espacio entre puntos */
+}
+
+.guia-list-explicativa li {
+  position: relative;
+  padding-left: 25px; /* Espacio para el bullet personalizado */
+  font-size: 14px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+/* El bullet personalizado (un puntito cian) */
+.guia-list-explicativa li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #08afbe;
+  font-size: 30px;
+  line-height: 0.6;
+}
+
+.guia-list-explicativa li strong {
+  color: #ffffff;
+  display: block; /* Hace que el título del punto resalte más */
+  margin-bottom: 2px;
+}
+
+.guia-list-explicativa span {
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Cuadrícula de categorías dentro de la guía */
+.guia-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.cat-tag {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  border-left: 3px solid transparent; /* El color se asigna en el style del JSX */
+  display: flex;
+  align-items: center;
+}
+
+/* Ajuste para que la lista explicativa acepte la grid */
+.guia-list-explicativa li {
+  margin-bottom: 5px;
+}
+
+.guia-note-box {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px dashed #2e2e2e;
+}
+
+.guia-note-box p {
+  font-size: 13px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Para que las etiquetas de ingreso/ahorro no ocupen todo el ancho si son pocas */
+.guia-note-box .guia-categories-grid {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+/* --- LISTA DE PASOS (TELEGRAM) --- */
+.guia-steps {
+  position: relative;
+  margin: 15px 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guia-steps li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #08afbe;
+  font-size: 30px;
+  line-height: 0.7;
+}
+
+.guia-steps li {
+  color: #cbd5e1;
+  font-size: 15px;
+}
+
+.guia-steps li strong {
+  color: #ffffff;
+}
+
+/* --- TIPS Y HINTS --- */
+.hint {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 8px 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+  color: #818cf8 !important;
+  font-size: 13px !important;
+  font-style: italic;
+  border: 1px dashed rgba(99, 102, 241, 0.3);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .guia-container {
+    padding: 15px;
+  }
+
+  .guia-header h1 {
+    font-size: 28px;
+  }
+
+  .guia-section {
+    padding: 20px;
+  }
+
+  .guia-title h2 {
+    font-size: 18px;
+  }
+}
+
+/* --- CLASE DE GRADIENTE (REUTILIZADA) --- */
+.text-gradient {
+  background: linear-gradient(to right, #6366f1, #07c3e4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

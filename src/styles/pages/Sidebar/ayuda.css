@@ -1,0 +1,78 @@
+/* src/styles/pages/Sidebar/ayuda.css */
+.ayuda-page {
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ayuda-header {
+  margin-bottom: 32px;
+}
+
+.ayuda-header h1 {
+  font-size: 30px;
+  font-weight: bold;
+  background: linear-gradient(to right, #6366f1, #07c3e4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.ayuda-header p {
+  color: #94a3b8;
+  text-align: center;
+}
+
+.ayuda-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ayuda-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px;
+  background-color: #1a1a1a; /* Igual al sidebar */
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.ayuda-item:hover {
+  background-color: #2e2e2e;
+  border-color: #08afbe;
+}
+
+.ayuda-item-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ayuda-text h3 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.ayuda-text p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.icon-arrow {
+  color: #475569;
+}
+
+.ayuda-footer {
+  margin-top: 40px;
+  text-align: center;
+  color: #475569;
+}
