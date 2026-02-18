@@ -1,0 +1,135 @@
+/* Contenedor Base Dark */
+.global-finance-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  min-width: 280px;
+  padding: 12px 20px;
+  border-radius: 20px; /* Bordes más redondeados como en la imagen */
+
+  /* Fondo Oscuro Glassmorphism */
+  background: rgba(26, 31, 46, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  animation: welcome-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.global-finance-toast.absorbing {
+  animation: welcome-absorb 0.5s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+}
+
+.finance-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* --- ESTADO SUCCESS (Borde Verde Glow) --- */
+.global-finance-toast.success {
+  /* Borde inferior con sombra difusa para el efecto glow */
+  border-bottom: 2px solid #10b981;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(16, 185, 129, 0.2);
+}
+.global-finance-toast.success svg {
+  color: #10b981;
+}
+
+/* --- ESTADO ERROR (Borde Rojo Glow) --- */
+.global-finance-toast.error {
+  border-bottom: 2px solid #ef4444;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(239, 68, 68, 0.2);
+}
+.global-finance-toast.error svg {
+  color: #ef4444;
+}
+
+/* --- VARIANTE BIENVENIDA (Azul Profundo) --- */
+.global-finance-toast.welcome-variant {
+  top: 40px;
+  /* Gradiente oscuro elegante */
+  background: linear-gradient(
+    135deg,
+    rgba(20, 30, 48, 0.95),
+    rgba(36, 59, 85, 0.95)
+  );
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(100, 150, 255, 0.1);
+}
+
+/* --- COLORES DE ESTADO --- */
+.global-finance-toast.success {
+  border-bottom: 3px solid #10b981;
+}
+.global-finance-toast.success svg {
+  color: #10b981;
+}
+
+.global-finance-toast.error {
+  border-bottom: 3px solid #ef4444;
+}
+.global-finance-toast.error svg {
+  color: #ef4444;
+}
+
+/* --- REUTILIZAMOS TUS ANIMACIONES DE ABSORCIÓN --- */
+.global-finance-toast.welcome-variant.absorbing {
+  animation: welcome-absorb 0.6s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+@keyframes welcome-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes welcome-absorb {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0);
+    filter: blur(10px);
+  }
+}
+
+/* --- BIENVENIDA SIN BORDE Y CON GLOW --- */
+.global-finance-toast.welcome-variant {
+  border-bottom: none !important; /* Quitamos el verde de los success */
+
+  /* Gradiente premium para el fondo */
+  background: linear-gradient(
+    135deg,
+    rgba(26, 31, 46, 0.95),
+    rgba(18, 18, 18, 0.95)
+  ) !important;
+
+  /* Un resplandor azulado/dorado muy suave en lugar de borde */
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(100, 150, 255, 0.15) !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

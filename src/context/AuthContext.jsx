@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { supabase } from "../lib/supabaseClient";
+import { ToastUI } from "../components/ToastUI"; // Componente para mostrar el toast
 
 const AuthContext = createContext();
 
@@ -13,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       ? JSON.parse(saved)
       : { total: false, gasto: false, ingreso: false };
   });
+
   // ESTADOS GLOBALES DE PERFIL
   const [nickname, setNickname] = useState("");
   const [role, setRole] = useState("");
@@ -34,6 +42,67 @@ export const AuthProvider = ({ children }) => {
     setStates(newStates);
     localStorage.setItem("privacySettings", JSON.stringify(newStates));
   };
+
+  // --- NUEVO: Estado del Toast ---
+  const [isExiting, setIsExiting] = useState(false);
+  const timerRef = useRef(null);
+  const exitTimerRef = useRef(null);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+  const showToast = (message, type = "success") => {
+    // 1. LIMPIEZA: Si ya había un temporizador corriendo, lo cancelamos de inmediato
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+
+    // 2. RESET: Forzamos el estado a limpio para que la animación de entrada se reinicie
+    setIsExiting(false);
+    setToast({ show: true, message, type });
+
+    // 3. PROGRAMAR SALIDA: Guardamos los IDs en las referencias
+    // Iniciamos la animación de absorción a los 3.5 segundos
+    exitTimerRef.current = setTimeout(() => {
+      setIsExiting(true);
+    }, 3500);
+
+    // Borramos el componente a los 4 segundos
+    timerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "" });
+      setIsExiting(false);
+    }, 4100);
+  };
+  const hideToast = (instant = false) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+
+    if (instant) {
+      setToast({ show: false, message: "", type: "" });
+      setIsExiting(false);
+    } else {
+      // Si no, hacemos la animación elegante de absorción
+      setIsExiting(true);
+      setTimeout(() => {
+        setToast((prev) => ({ ...prev, show: false }));
+        setIsExiting(false);
+      }, 600);
+    }
+  };
+  useEffect(() => {
+    if (session && !loading) {
+      // --- NUEVO: Lógica de Saludo Diario ---
+      const hoy = new Date().toLocaleDateString("es-CL");
+      const ultimoSaludo = localStorage.getItem("ultimo_saludo");
+
+      if (ultimoSaludo !== hoy) {
+        // Personalizamos el saludo con el nickname que ya tienes en el context
+        const mensaje = `¡Buenos días, ${nickname || "Usuario"}! ☀️`;
+        showToast(mensaje, "success");
+        localStorage.setItem("ultimo_saludo", hoy);
+      }
+    }
+  }, [session, loading, nickname]);
 
   // 1. FUNCIÓN PARA CARGAR GASTOS (Disponible para toda la app)
   const refreshGastos = async () => {
@@ -151,11 +220,14 @@ export const AuthProvider = ({ children }) => {
         states,
         togglePrivacy,
         fetchUserProfile,
+        showToast,
+        hideToast,
         /* vistaModo,
         setVistaModo, */
       }}
     >
       {children}
+      <ToastUI toast={toast} isExiting={isExiting} />
     </AuthContext.Provider>
   );
 };

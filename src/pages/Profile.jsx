@@ -19,11 +19,11 @@ import {
 import "../styles/pages/Profile/profile.css";
 
 export function Profile() {
-  const { session, nickname, idTelegram } = useAuth();
+  const { session, nickname, idTelegram, showToast } = useAuth();
   const [telegramToken, setTelegramToken] = useState(""); // Cambiamos ID por Token
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  /* const [toast, setToast] = useState({ show: false, message: "", type: "" }); */
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [localIdTelegram, setLocalIdTelegram] = useState(idTelegram);
 
@@ -72,9 +72,9 @@ export function Profile() {
       if (error) throw error;
 
       setTelegramToken(newToken);
-      showPopUp("¡Nuevo Token generado!", "success");
+      showToast("¡Nuevo Token generado!", "success");
     } catch (err) {
-      showPopUp("Error: " + err.message, "error");
+      showToast("Error: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export function Profile() {
   const handleCopy = () => {
     navigator.clipboard.writeText(telegramToken);
     setCopied(true);
-    showPopUp("Token copiado al portapapeles", "success");
+    showToast("Token copiado al portapapeles", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -102,9 +102,9 @@ export function Profile() {
       setLocalIdTelegram(null); // Esto hará que el botón cambie a "Generar" al instante
       setTelegramToken("");
 
-      showPopUp("Conexión eliminada correctamente", "success");
+      showToast("Conexión eliminada correctamente", "success");
     } catch (err) {
-      showPopUp("Error al desvincular", "error");
+      showToast("Error al desvincular", "error");
     } finally {
       setLoading(false);
     }
@@ -265,20 +265,6 @@ export function Profile() {
 
       {/* SISTEMA DE NOTIFICACIÓN POPUP */}
       {/* SISTEMA DE NOTIFICACIÓN CON PORTAL */}
-      {toast.show &&
-        createPortal(
-          <div className={`modern-toast ${toast.type}`}>
-            <div className="toast-content">
-              {toast.type === "success" ? (
-                <CheckCircle size={18} />
-              ) : (
-                <AlertCircle size={18} />
-              )}
-              <span>{toast.message}</span>
-            </div>
-          </div>,
-          document.body, // Esto lo manda al final del HTML, fuera de todo riesgo
-        )}
     </div>
   );
 }

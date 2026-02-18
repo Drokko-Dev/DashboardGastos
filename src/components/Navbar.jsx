@@ -7,9 +7,15 @@ import { useAuth } from "../context/AuthContext";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showCheck, setShowCheck] = useState(false);
-  const { refreshGastos, loadingGastos } = useAuth();
+  const { refreshGastos, loadingGastos, hideToast } = useAuth();
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleSidebar = () => {
+    if (!isOpen) {
+      // Solo intentamos ocultar el toast si estamos ABRIENDO el sidebar
+      hideToast(true);
+    }
+    setIsOpen(!isOpen);
+  };
 
   const handleRefresh = async () => {
     await refreshGastos();
