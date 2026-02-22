@@ -22,7 +22,8 @@ export const AuthProvider = ({ children }) => {
   });
 
   // ESTADOS GLOBALES DE PERFIL
-  const [nickname, setNickname] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [usernameTg, setUsernameTg] = useState("");
   const [role, setRole] = useState("");
   const [idTelegram, setIdTelegram] = useState(null);
   const [currentCycleId, setCurrentCycleId] = useState(null);
@@ -47,6 +48,9 @@ export const AuthProvider = ({ children }) => {
   const [isExiting, setIsExiting] = useState(false);
   const timerRef = useRef(null);
   const exitTimerRef = useRef(null);
+  const lastGastosRefreshRef = useRef(0);
+  const initialLoadDone = useRef(false);
+  const currentUserIdRef = useRef(null);
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -97,12 +101,12 @@ export const AuthProvider = ({ children }) => {
 
       if (ultimoSaludo !== hoy) {
         // Personalizamos el saludo con el nickname que ya tienes en el context
-        const mensaje = `¡Buenos días, ${nickname || "Usuario"}! ☀️`;
+        const mensaje = `¡Buenos días, ${fullName || "Usuario"}! ☀️`;
         showToast(mensaje, "success");
         localStorage.setItem("ultimo_saludo", hoy);
       }
     }
-  }, [session, loading, nickname]);
+  }, [session, loading, fullName]);
 
   // 1. FUNCIÓN PARA CARGAR GASTOS (Disponible para toda la app)
   const refreshGastos = async () => {
@@ -125,22 +129,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 2. FUNCIÓN PARA CARGAR PERFIL
   async function fetchUserProfile(userId) {
-    setLoading(true); // <--- Nos aseguramos de que el loading esté activo
+    if (!initialLoadDone.current) {
+      setLoading(true);
+    }
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, telegram_id, current_cycle_id")
+        .select("full_name, telegram_id, username_tg, current_cycle_id")
         .eq("id", userId)
         .maybeSingle();
 
       if (profile) {
-        setNickname(profile.full_name || "Usuario");
+        setFullName(profile.full_name || "Usuario");
         setIdTelegram(profile.telegram_id);
         setCurrentCycleId(profile.current_cycle_id);
+        
+        let displayNickname = profile.full_name;
+        const partesDelNombre = profile.full_name.trim().split(/\s+/); // Divide por espacios
+        displayNickname = partesDelNombre.slice(0, 2).join(" ");
+        setUsernameTg(profile.username_tg || displayNickname)
 
-        // Si hay ciclo, esperamos a que cargue también
         if (profile.current_cycle_id) {
           const { data: cicloInfo } = await supabase
             .from("ciclos")
@@ -153,28 +162,43 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Error:", err);
     } finally {
-      // SOLO AQUÍ apagamos el loading, cuando ya tenemos TODO
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }
 
   useEffect(() => {
-    // Escuchar cambios en la sesión
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchUserProfile(session.user.id);
-      else setLoading(false);
+      if (session) {
+        currentUserIdRef.current = session.user.id;
+        fetchUserProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        // Limpieza al cerrar sesión
-        setNickname("");
+      if (_event === "INITIAL_SESSION") return;
+
+      setSession((prev) => {
+        const prevId = prev?.user?.id;
+        const newId = session?.user?.id;
+        if (prevId === newId) return prev;
+        return session;
+      });
+
+      if (_event === "SIGNED_IN") {
+        if (session.user.id !== currentUserIdRef.current) {
+          currentUserIdRef.current = session.user.id;
+          fetchUserProfile(session.user.id);
+        }
+      } else if (_event === "SIGNED_OUT") {
+        currentUserIdRef.current = null;
+        initialLoadDone.current = false;
+        setFullName("");
         setRole("");
         setIdTelegram(null);
         setGastosRaw([]);
@@ -188,28 +212,30 @@ export const AuthProvider = ({ children }) => {
   // ... dentro de AuthProvider ...
 
   useEffect(() => {
+    const COOLDOWN_MS = 5 * 60 * 1000;
+
     const handleVisibilityChange = () => {
-      // Si la pestaña pasa de estar en segundo plano a estar visible
-      if (document.visibilityState === "visible" && session) {
-        console.log("App recuperada: Refrescando datos...");
-        refreshGastos();
-      }
+      if (document.visibilityState !== "visible" || !session) return;
+
+      const now = Date.now();
+      if (now - lastGastosRefreshRef.current < COOLDOWN_MS) return;
+      lastGastosRefreshRef.current = now;
+
+      setTimeout(() => refreshGastos(), 500);
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Limpieza al desmontar el componente
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [session]); // Se ejecuta cuando la sesión está activa
+  }, [session]);
 
   return (
     <AuthContext.Provider
       value={{
         session,
         loading,
-        nickname,
+        fullName,
         role,
         idTelegram,
         currentCycleId,
@@ -222,6 +248,8 @@ export const AuthProvider = ({ children }) => {
         fetchUserProfile,
         showToast,
         hideToast,
+        usernameTg,
+        setUsernameTg,
         /* vistaModo,
         setVistaModo, */
       }}

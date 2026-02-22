@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Component } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -19,6 +19,27 @@ import { Link as LinkIcon } from "lucide-react";
 import { ResumenCards } from "../components/ResumenCards";
 import { Loading } from "../components/Loading";
 import { CicloBanner } from "../components/CicloBanner";
+
+class ChartErrorBoundary extends Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.warn("Recharts render error caught:", error.message);
+    this._resetTimer = setTimeout(
+      () => this.setState({ hasError: false }),
+      2000,
+    );
+  }
+  componentWillUnmount() {
+    clearTimeout(this._resetTimer);
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -53,7 +74,7 @@ export function Dashboard() {
   // 1. CONSUMO DEL CONTEXTO GLOBAL
   const {
     session,
-    nickname,
+    fullName,
     currentCycleId,
     cicloData,
     gastosRaw,
@@ -178,6 +199,7 @@ export function Dashboard() {
               <p>Distribución mensual</p>
             </div>
             <div className="chart-content">
+              <ChartErrorBoundary>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <defs>
@@ -272,6 +294,7 @@ export function Dashboard() {
                   />
                 </PieChart>
               </ResponsiveContainer>
+              </ChartErrorBoundary>
             </div>
           </div>
 
@@ -284,6 +307,7 @@ export function Dashboard() {
             </div>
 
             <div className="chart-content ">
+              <ChartErrorBoundary>
               <ResponsiveContainer width="100%" height="100%">
                 {isMobile ? (
                   /* VISTA CELULAR: Barras Horizontales */
@@ -409,6 +433,7 @@ export function Dashboard() {
                   </BarChart>
                 )}
               </ResponsiveContainer>
+              </ChartErrorBoundary>
             </div>
           </div>
         </div>

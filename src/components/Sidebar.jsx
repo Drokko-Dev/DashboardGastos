@@ -77,7 +77,7 @@ const DownloadIcon = (
 );
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { session, nickname, role } = useAuth();
+  const { session, fullName, role, usernameTg } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   // BLOQUEO DE SCROLL: Evita que el fondo se mueva en móviles
   useEffect(() => {
@@ -247,7 +247,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               <div className="sidebar-user-info">
                 <div>
                   <span className="sidebar-nickname">
-                    {nickname || "Usuario"}
+                    {usernameTg || "Usuario"}
                   </span>
                   {role === "admin" && (
                     <span className="admin-badge">{role}</span>

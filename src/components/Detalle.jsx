@@ -53,7 +53,7 @@ const btnEditeSVG = (
 export function Detalle() {
   const {
     session,
-    nickname,
+    fullName,
     role,
     currentCycleId,
     idTelegram,

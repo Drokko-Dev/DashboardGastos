@@ -6,26 +6,33 @@ import {
   Send,
   User,
   Edit2,
+  Check,
   CheckCircle,
   MessageCircle,
   Mail,
+  IdCard,
   Trash2,
   Smartphone,
   Lock as LockIcon,
   AlertCircle,
   Copy,
-  RefreshCw, // Agregamos estos
+  RefreshCw,
+  X,
 } from "lucide-react";
 import "../styles/pages/Profile/profile.css";
 
 export function Profile() {
-  const { session, nickname, idTelegram, showToast } = useAuth();
-  const [telegramToken, setTelegramToken] = useState(""); // Cambiamos ID por Token
+  const { session, fullName, idTelegram, showToast, usernameTg, setUsernameTg } =
+    useAuth();
+  const [telegramToken, setTelegramToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  /* const [toast, setToast] = useState({ show: false, message: "", type: "" }); */
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [localIdTelegram, setLocalIdTelegram] = useState(idTelegram);
+
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState(usernameTg);
+  const [savingUsername, setSavingUsername] = useState(false);
 
   // Cargar el token al iniciar (asumiendo que se guarda en la columna telegram_token)
   useEffect(() => {
@@ -45,9 +52,38 @@ export function Profile() {
     setLocalIdTelegram(idTelegram);
   }, [idTelegram]);
 
-  const showPopUp = (msg, type = "success") => {
-    setToast({ show: true, message: msg, type });
-    setTimeout(() => setToast({ show: false, message: "", type: "" }), 4000);
+  useEffect(() => {
+    setUsernameInput(usernameTg);
+  }, [usernameTg]);
+
+  const handleSaveUsername = async () => {
+    const trimmed = usernameInput.trim();
+    if (!trimmed || trimmed === usernameTg) {
+      setIsEditingUsername(false);
+      setUsernameInput(usernameTg);
+      return;
+    }
+    setSavingUsername(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username_tg: trimmed })
+        .eq("id", session.user.id);
+      if (error) throw error;
+      setUsernameTg(trimmed);
+      showToast("Nombre actualizado", "success");
+    } catch (err) {
+      showToast("Error al guardar: " + err.message, "error");
+      setUsernameInput(usernameTg);
+    } finally {
+      setSavingUsername(false);
+      setIsEditingUsername(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setUsernameInput(usernameTg);
+    setIsEditingUsername(false);
   };
 
   // --- LÓGICA CYMAX: GENERACIÓN DE TOKEN ÚNICO ---
@@ -118,7 +154,48 @@ export function Profile() {
             <User size={45} color="white" />
           </div>
           <div className="user-text-info">
-            <h1>{nickname || "Cargando..."}</h1>
+            {isEditingUsername ? (
+              <div className="username-edit-row">
+                <input
+                  className="username-edit-input"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveUsername();
+                    if (e.key === "Escape") handleCancelEdit();
+                  }}
+                  maxLength={30}
+                  autoFocus
+                  disabled={savingUsername}
+                />
+                <button
+                  className="username-edit-btn save"
+                  onClick={handleSaveUsername}
+                  disabled={savingUsername}
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  className="username-edit-btn cancel"
+                  onClick={handleCancelEdit}
+                  disabled={savingUsername}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="username-display-row">
+                <h1>{usernameTg || "Usuario"}</h1>
+                <button
+                  className="username-edit-trigger"
+                  onClick={() => setIsEditingUsername(true)}
+                >
+                  <Edit2 size={14} />
+                </button>
+              </div>
+            )}
+            <div className="user-fullname">
+            <IdCard size={14} /> <span>{fullName}</span></div>
             <div className="user-email">
               <Mail size={14} /> <span>{session?.user.email}</span>
             </div>

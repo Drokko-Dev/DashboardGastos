@@ -63,15 +63,15 @@ const PrivateLayout = ({ children }) => {
 };
 
 function App() {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   return (
     <>
       <ScrollToTop />
       <Routes>
-        {/* RUTA RAÍZ: Si no hay sesión, ve la Landing. Si hay, va al Dashboard */}
         <Route
           path="/"
           element={
+            loading ? null :
             !session ? (
               <PublicLayout>
                 <Landing />
@@ -108,15 +108,14 @@ function App() {
           }
         />
 
-        {/* RUTA PÚBLICA DE LOGIN */}
         <Route
           path="/login"
-          element={!session ? <Login /> : <Navigate to="/dashboard" />}
+          element={loading ? null : !session ? <Login /> : <Navigate to="/dashboard" />}
         />
 
         <Route
           path="/signup"
-          element={!session ? <SignUp /> : <Navigate to="/dashboard" />}
+          element={loading ? null : !session ? <SignUp /> : <Navigate to="/dashboard" />}
         />
 
         {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}

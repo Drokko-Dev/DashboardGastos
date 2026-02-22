@@ -64,6 +64,91 @@
   margin-bottom: 12px;
 }
 
+.username-display-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.username-display-row h1 {
+  margin: 0;
+}
+
+.username-edit-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  transition: all 0.2s ease;
+}
+
+.username-edit-trigger:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.username-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.username-edit-input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--accent-color);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 10px;
+  outline: none;
+  width: 100%;
+  max-width: 260px;
+  transition: border-color 0.2s;
+}
+
+.username-edit-input:focus {
+  border-color: var(--primary-cyan);
+  box-shadow: 0 0 0 3px rgba(8, 175, 190, 0.15);
+}
+
+.username-edit-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+  padding: 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  transition: all 0.2s;
+}
+
+.username-edit-btn.save:hover {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.username-edit-btn.cancel:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error-red);
+  border-color: var(--error-red);
+}
+
+.user-fullname {
+  
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  
+}
+
 .user-badge {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
@@ -524,6 +609,9 @@
   .cymax-token-action {
     width: 100%;
     max-width: none;
+  }
+  .username-display-row{
+    justify-content: center;
   }
 }
 
