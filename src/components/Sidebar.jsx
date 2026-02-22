@@ -211,7 +211,32 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Papelera
             </h1>
           </NavLink>
-
+          <NavLink
+            to="/ciclos"
+            onClick={toggleSidebar}
+            className="sidebar-item-page"
+          >
+            <h1>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width={24}
+                height={24}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="icon icon-tabler"
+              >
+                <path d="M12 3a9 9 0 1 0 9 9" />
+                <path d="M12 8v4l2 2" />
+                <path d="M14 3a9 9 0 0 1 7 7" />
+                <circle cx="12" cy="12" r="1" />
+              </svg>
+              Ciclos
+            </h1>
+          </NavLink>
           <NavLink
             to="/ayuda"
             onClick={toggleSidebar}
@@ -237,6 +262,9 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               Ayuda
             </h1>
           </NavLink>
+
+
+
           {/* SECCIÓN DE PERFIL */}
           <div className="sidebar-profile-wrapper">
             <div

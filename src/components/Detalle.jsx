@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { Navbar } from "./Navbar";
-import { useAuth } from "../context/AuthContext"; // Usamos el contexto global
-import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Loading } from "./Loading";
 import { AddTransactionButton } from "./FloatingActionButton";
 import { TransactionSheet } from "./TrasactionSheet";
+import { Edit2, Trash2, Calendar } from "lucide-react";
 
 const CATEGORY_COLORS = {
   Alimentos: "#bbd83a",
@@ -17,7 +16,7 @@ const CATEGORY_COLORS = {
   Compras: "#a8dbdb",
   Fijos: "#6366F1",
   Otros: "#697fa193",
-  Ahorro: "#00d4ff", // Un cian eléctrico para resaltar el ahorro
+  Ahorro: "#00d4ff",
 };
 
 const btnDeleteSVG = (
@@ -53,276 +52,145 @@ const btnEditeSVG = (
 export function Detalle() {
   const {
     session,
-    fullName,
-    role,
     currentCycleId,
-    idTelegram,
     gastosRaw,
     refreshGastos,
     loadingGastos,
     states = {},
+    showToast, // Toast global estándar
+    refreshUserProfile
   } = useAuth();
 
-  // Estados locales de UI
   const [showModal, setShowModal] = useState(false);
   const [type, setType] = useState("gasto");
   const [monto, setMonto] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState("Otros");
-  const [reiniciarCiclo, setReiniciarCiclo] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [editingGasto, setEditingGasto] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  /* const { vistaModo, setVistaModo } = useAuth(); */
+
   const [vistaModo, setVistaModo] = useState(() => {
     return localStorage.getItem("preferencia_vista") || "mes";
   });
 
-  // 1. LÓGICA DE FILTRADO REACTIVA
+  // Filtrado de movimientos
   const movimientosAMostrar = useMemo(() => {
-    // Primero, filtramos SOLO los que NO están eliminados
     const soloActivos = gastosRaw.filter((g) => !g.deleted_at);
-
     if (vistaModo === "mes") {
       const ahora = new Date();
       const mesActual = ahora.getMonth();
       const anioActual = ahora.getFullYear();
-
       return soloActivos.filter((g) => {
         const fechaMov = new Date(g.date);
-        return (
-          fechaMov.getMonth() === mesActual &&
-          fechaMov.getFullYear() === anioActual
-        );
+        return fechaMov.getMonth() === mesActual && fechaMov.getFullYear() === anioActual;
       });
     } else {
-      // Para el modo ciclo
       if (!currentCycleId) return soloActivos;
       return soloActivos.filter((g) => g.ciclo_id === currentCycleId);
     }
   }, [gastosRaw, vistaModo, currentCycleId]);
 
-  // 2. LÓGICA DE AGRUPAMIENTO REACTIVA
+  // Agrupamiento por fecha
   const grupos = useMemo(() => {
     return movimientosAMostrar.reduce((grupos, mov) => {
-      // 1. Convertimos el ISO almacenado a un objeto Date (esto ya considera Chile)
       const fechaObj = new Date(mov.date);
-
-      // 2. Creamos el encabezado (Ej: "20 de mayo de 2024")
       const fechaFormateada = fechaObj.toLocaleDateString("es-CL", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+        day: "numeric", month: "long", year: "numeric",
       });
-
       if (!grupos[fechaFormateada]) {
         grupos[fechaFormateada] = { items: [], subtotal: 0 };
       }
-
       grupos[fechaFormateada].items.push(mov);
-
       const montoNum = Number(mov.amount || 0);
-      // Sumamos si es ingreso, restamos si es gasto o ahorro
-      grupos[fechaFormateada].subtotal +=
-        mov.type === "ingreso" ? montoNum : -montoNum;
-
+      grupos[fechaFormateada].subtotal += mov.type === "ingreso" ? montoNum : -montoNum;
       return grupos;
     }, {});
   }, [movimientosAMostrar]);
-
-  // Forzar categoría "Ingreso" si el tipo es ingreso
-  useEffect(() => {
-    if (type === "ingreso") {
-      setCategoria("Ingreso");
-    } else if (type === "ahorro") {
-      setCategoria("Ahorro");
-      setReiniciarCiclo(false);
-    } else {
-      // Si es gasto, reseteamos a Otros o lo dejamos libre
-      setCategoria("Otros");
-      setReiniciarCiclo(false);
-    }
-  }, [type]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem("preferencia_vista", vistaModo);
   }, [vistaModo]);
 
-  // --- 1. FUNCIÓN PARA GUARDAR (Adaptada a Multi-usuario y tabla 'transacciones') ---
-  async function handleSave() {
-    if (!type) return alert("Selecciona Gasto o Ingreso");
-    if (!descripcion) return alert("Falta la descripción");
-    const montoNumerico = Number(monto);
+  // --- ACCIONES ---
 
+  async function handleSave() {
+    const montoNumerico = Number(monto);
+    if (!descripcion.trim()) return showToast("⚠️ Ingresa una descripción", "error");
     if (!monto || isNaN(montoNumerico) || montoNumerico <= 0) {
-      setToast({ show: true, message: "⚠️ Monto inválido", type: "error" });
-      return;
+      return showToast("⚠️ Monto inválido", "error");
     }
 
     try {
-      // Usamos el id de la sesión para obtener el perfil actualizado
-      const { data: profile, error: errorProf } = await supabase
-        .from("profiles")
-        .select("id, current_cycle_id, telegram_id")
-        .eq("id", session.user.id)
-        .single();
+      const ahora = new Date().toISOString();
+      const { error } = await supabase.from("transacciones").insert([{
+        user_id: session.user.id,
+        ciclo_id: currentCycleId,
+        amount: montoNumerico,
+        category: categoria,
+        description_user: descripcion.trim(),
+        type: type,
+        origin: "web",
+        date: ahora,
+        created_at: ahora,
+        is_sueldo: false
+      }]);
 
-      if (errorProf) throw errorProf;
+      if (error) throw error;
 
-      const ahora = new Date();
-      const createdAtISO = ahora.toISOString();
-      const fechaSQL = ahora.toLocaleDateString("en-CA");
-
-      let cicloIdFinal = profile.current_cycle_id;
-
-      // --- LÓGICA DE REINICIO DE CICLO (v1.1.2) ---
-      if (type === "ingreso" && reiniciarCiclo) {
-        // Usamos el timestamp completo para precisión en Chile
-        const ahoraISO = new Date().toISOString();
-
-        if (profile.current_cycle_id) {
-          // 1. Cerramos el ciclo anterior usando los nombres de columna correctos
-          await supabase
-            .from("ciclos")
-            .update({
-              is_active: false, // Antes era 'estado'
-              end_date: ahoraISO, // Antes era 'fecha_fin'
-            })
-            .eq("id", profile.current_cycle_id);
-        }
-
-        // 2. Insertamos el nuevo ciclo con tus columnas: name, start_date, budget, is_active
-        const { data: nuevoCiclo, error: errC } = await supabase
-          .from("ciclos")
-          .insert([
-            {
-              user_id: profile.id,
-              name: descripcion.trim(), // Antes era 'nombre'
-              budget: montoNumerico, // Antes era 'monto_inicial'
-              start_date: ahoraISO, // Antes era 'fecha_inicio'
-              is_active: true, // Antes era 'estado'
-            },
-          ])
-          .select()
-          .single();
-
-        if (errC) throw errC;
-        cicloIdFinal = nuevoCiclo.id;
-
-        // 3. Actualizamos el puntero en el perfil
-        await supabase
-          .from("profiles")
-          .update({ current_cycle_id: cicloIdFinal })
-          .eq("id", profile.id);
-      }
-
-      // INSERTAR EN LA TABLA 'transacciones'
-      const { error: errG } = await supabase
-        .from("transacciones") // <--- TABLA ACTUALIZADA
-        .insert([
-          {
-            user_id: profile.id, // Dueño del registro
-            ciclo_id: cicloIdFinal,
-            amount: montoNumerico,
-            category: categoria,
-            description_user: descripcion.trim(),
-            type: type,
-            origin: "web",
-            id_telegram: profile.telegram_id,
-            date: createdAtISO,
-            created_at: createdAtISO,
-            is_sueldo: type === "ingreso" && reiniciarCiclo,
-          },
-        ]);
-
-      if (errG) throw errG;
-
-      setToast({
-        show: true,
-        message: reiniciarCiclo ? "¡Ciclo Reiniciado! 🚀" : "¡Guardado! ✅",
-        type: "success",
-      });
-      setTimeout(() => setToast({ show: false }), 3000);
+      showToast("¡Registro guardado! ✅", "success");
       setShowModal(false);
       setMonto("");
       setDescripcion("");
-      setReiniciarCiclo(false);
       await refreshGastos();
+      if (refreshUserProfile) await refreshUserProfile();
     } catch (err) {
-      console.error("Error:", err);
-      setToast({ show: true, message: "Error: " + err.message, type: "error" });
-      setTimeout(() => setToast({ show: false }), 3000);
+      showToast("Error al guardar", "error");
     }
   }
+
+  async function executeDelete() {
+    try {
+      const { error } = await supabase
+        .from("transacciones")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", selectedId);
+
+      if (error) throw error;
+      showToast("Movido a la papelera 🗑️", "success");
+      setShowDeleteModal(false);
+      await refreshGastos();
+    } catch (err) {
+      showToast("Error al eliminar", "error");
+    }
+  }
+
   const confirmDelete = (id) => {
     console.log("Abriendo modal para ID:", id); // Para debug en consola
     setSelectedId(id);
     setShowDeleteModal(true);
   };
 
-  // --- 2. FUNCIÓN PARA ELIMINAR (Soft Delete en 'transacciones') ---
-  async function executeDelete() {
-    try {
-      const ahora = new Date();
-      const deletedAtISO = ahora.toISOString();
-
-      const { error } = await supabase
-        .from("transacciones") // <--- TABLA ACTUALIZADA
-        .update({ deleted_at: deletedAtISO })
-        .eq("id", selectedId)
-        .eq("user_id", session.user.id); // Seguridad: Solo el dueño borra
-
-      if (error) throw error;
-
-      setToast({
-        show: true,
-        message: "Movido a la papelera 🗑️",
-        type: "success",
-      });
-      setTimeout(() => setToast({ show: false }), 3000);
-      setShowDeleteModal(false);
-      await refreshGastos();
-    } catch (err) {
-      console.error(err);
-      setToast({ show: true, message: "Error al eliminar", type: "error" });
-      setTimeout(() => setToast({ show: false }), 3000);
-    }
-  }
-
-  // --- 3. FUNCIÓN PARA ACTUALIZAR (En 'transacciones') ---
   async function handleUpdate() {
     if (!editingGasto.description_user.trim()) return;
-    const montoNumerico = Number(editingGasto.amount);
-
     try {
       const { error } = await supabase
-        .from("transacciones") // <--- TABLA ACTUALIZADA
+        .from("transacciones")
         .update({
-          amount: montoNumerico,
+          amount: Number(editingGasto.amount),
           description_user: editingGasto.description_user.trim(),
           category: editingGasto.category,
         })
-        .eq("id", editingGasto.id)
-        .eq("user_id", session.user.id); // Seguridad
+        .eq("id", editingGasto.id);
 
       if (error) throw error;
-
       setEditingGasto(null);
-      setToast({ show: true, message: "¡Actualizado! ✨", type: "success" });
-      setTimeout(() => setToast({ show: false }), 3000);
+      showToast("¡Actualizado! ✨", "success");
       await refreshGastos();
     } catch (err) {
-      console.error(err);
-      setToast({ show: true, message: "Error al actualizar", type: "error" });
-      setTimeout(() => setToast({ show: false }), 3000);
+      showToast("Error al actualizar", "error");
     }
   }
 
@@ -330,40 +198,13 @@ export function Detalle() {
 
   return (
     <>
-      {toast.show && (
-        <div
-          className="toast-notification"
-          style={
-            toast.type === "success"
-              ? {
-                  backgroundColor: "#064e3b",
-                  color: "#3ec016",
-                  border: "1px solid #119605",
-                }
-              : {
-                  backgroundColor: "#4e0606ad",
-                  color: "#c01616",
-                  border: "1px solid #960505",
-                }
-          }
-        >
-          {toast.message}
-        </div>
-      )}
-
       <TransactionSheet
         show={showModal}
         onClose={() => setShowModal(false)}
-        type={type}
-        setType={setType}
-        monto={monto}
-        setMonto={setMonto}
-        descripcion={descripcion}
-        setDescripcion={setDescripcion}
-        categoria={categoria}
-        setCategoria={setCategoria}
-        reiniciarCiclo={reiniciarCiclo}
-        setReiniciarCiclo={setReiniciarCiclo}
+        type={type} setType={setType}
+        monto={monto} setMonto={setMonto}
+        descripcion={descripcion} setDescripcion={setDescripcion}
+        categoria={categoria} setCategoria={setCategoria}
         onSave={handleSave}
         CATEGORY_COLORS={CATEGORY_COLORS}
       />
@@ -630,11 +471,11 @@ export function Detalle() {
                                 g.category === "Ahorro"
                                   ? {}
                                   : {
-                                      color: `${categoriaColor}`,
-                                      opacity: 0.85,
-                                      borderColor: categoriaColor,
-                                      backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
-                                    }
+                                    color: `${categoriaColor}`,
+                                    opacity: 0.85,
+                                    borderColor: categoriaColor,
+                                    backgroundColor: `${categoriaColor}25`, // 15 añade un 8% de opacidad para el fondo
+                                  }
                               }
                             >
                               {g.category || "GENERAL"}

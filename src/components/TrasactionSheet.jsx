@@ -12,9 +12,7 @@ export function TransactionSheet({
   setDescripcion,
   categoria,
   setCategoria,
-  reiniciarCiclo,
-  setReiniciarCiclo,
-  onSave,
+  onSave, // Quitamos reiniciarCiclo y setReiniciarCiclo de las props
   CATEGORY_COLORS,
 }) {
   // 1. REGLA DE HOOKS: Bloqueo de scroll del fondo
@@ -29,20 +27,18 @@ export function TransactionSheet({
     };
   }, [show]);
 
-  // 2. Sincronización de categorías según el tipo
+  // 2. Sincronización de categorías según el tipo (Limpio)
   useEffect(() => {
     if (type === "ingreso") {
       setCategoria("Ingreso");
     } else if (type === "ahorro") {
       setCategoria("Ahorro");
-      setReiniciarCiclo(false);
     } else {
       if (categoria === "Ingreso" || categoria === "Ahorro") {
         setCategoria("Otros");
       }
-      setReiniciarCiclo(false);
     }
-  }, [type, setCategoria, setReiniciarCiclo]);
+  }, [type, setCategoria]);
 
   if (!show) return null;
 
@@ -137,22 +133,7 @@ export function TransactionSheet({
               </select>
             </div>
 
-            {type === "ingreso" && (
-              <div className="special-card-modern">
-                <div className="info">
-                  <strong>Iniciar Nuevo Ciclo 🚀</strong>
-                  <span>¿Este ingreso resetea tu mes?</span>
-                </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={reiniciarCiclo}
-                    onChange={(e) => setReiniciarCiclo(e.target.checked)}
-                  />
-                  <span className="slider round"></span>
-                </label>
-              </div>
-            )}
+            {/* La sección "Iniciar Nuevo Ciclo" ha sido eliminada de aquí */}
           </div>
         </main>
 

@@ -4,10 +4,11 @@
   top: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2000;
+  z-index: 4000;
   min-width: 280px;
   padding: 12px 20px;
-  border-radius: 20px; /* Bordes más redondeados como en la imagen */
+  border-radius: 20px;
+  /* Bordes más redondeados como en la imagen */
 
   /* Fondo Oscuro Glassmorphism */
   background: rgba(26, 31, 46, 0.95);
@@ -20,6 +21,7 @@
   transition: all 0.3s ease;
   animation: welcome-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
 .global-finance-toast.absorbing {
   animation: welcome-absorb 0.5s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
 }
@@ -41,6 +43,7 @@
     0 10px 30px rgba(0, 0, 0, 0.4),
     0 4px 10px rgba(16, 185, 129, 0.2);
 }
+
 .global-finance-toast.success svg {
   color: #10b981;
 }
@@ -52,6 +55,7 @@
     0 10px 30px rgba(0, 0, 0, 0.4),
     0 4px 10px rgba(239, 68, 68, 0.2);
 }
+
 .global-finance-toast.error svg {
   color: #ef4444;
 }
@@ -60,11 +64,9 @@
 .global-finance-toast.welcome-variant {
   top: 40px;
   /* Gradiente oscuro elegante */
-  background: linear-gradient(
-    135deg,
-    rgba(20, 30, 48, 0.95),
-    rgba(36, 59, 85, 0.95)
-  );
+  background: linear-gradient(135deg,
+      rgba(20, 30, 48, 0.95),
+      rgba(36, 59, 85, 0.95));
   border: 1px solid rgba(100, 150, 255, 0.2);
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.6),
@@ -75,6 +77,7 @@
 .global-finance-toast.success {
   border-bottom: 3px solid #10b981;
 }
+
 .global-finance-toast.success svg {
   color: #10b981;
 }
@@ -82,6 +85,7 @@
 .global-finance-toast.error {
   border-bottom: 3px solid #ef4444;
 }
+
 .global-finance-toast.error svg {
   color: #ef4444;
 }
@@ -96,6 +100,7 @@
     opacity: 0;
     transform: translate(-50%, -100px) scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
@@ -108,6 +113,7 @@
     transform: translate(-50%, 0) scale(1);
     filter: blur(0px);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, 0) scale(0);
@@ -117,14 +123,13 @@
 
 /* --- BIENVENIDA SIN BORDE Y CON GLOW --- */
 .global-finance-toast.welcome-variant {
-  border-bottom: none !important; /* Quitamos el verde de los success */
+  border-bottom: none !important;
+  /* Quitamos el verde de los success */
 
   /* Gradiente premium para el fondo */
-  background: linear-gradient(
-    135deg,
-    rgba(26, 31, 46, 0.95),
-    rgba(18, 18, 18, 0.95)
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(26, 31, 46, 0.95),
+      rgba(18, 18, 18, 0.95)) !important;
 
   /* Un resplandor azulado/dorado muy suave en lugar de borde */
   box-shadow:

@@ -14,6 +14,7 @@ import { Navbar } from "./components/Navbar";
 import { Landing } from "./pages/Landing/Landing";
 import { SignUp } from "./pages/SignUp";
 import { Profile } from "./pages/Profile";
+import Ciclos  from "./pages/Ciclos/Ciclos";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { Ayuda } from "./pages/Sidebar/Ayuda";
 import { GuiaUso } from "./pages/Sidebar/GuiaUso";
@@ -157,6 +158,14 @@ function App() {
           element={
             <PrivateLayout>
               <Seguridad />
+            </PrivateLayout>
+          }
+        />
+         <Route
+          path="/ciclos"
+          element={
+            <PrivateLayout>
+              <Ciclos />
             </PrivateLayout>
           }
         />

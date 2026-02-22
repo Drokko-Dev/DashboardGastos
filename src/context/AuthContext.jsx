@@ -28,6 +28,8 @@ export const AuthProvider = ({ children }) => {
   const [idTelegram, setIdTelegram] = useState(null);
   const [currentCycleId, setCurrentCycleId] = useState(null);
   const [cicloData, setCicloData] = useState(null);
+  const [ciclos, setCiclos] = useState([]);
+  const [loadingCiclos, setLoadingCiclos] = useState(true);
 
   // ESTADOS GLOBALES DE MOVIMIENTOS (La clave de la velocidad)
   const [gastosRaw, setGastosRaw] = useState(() => {
@@ -144,7 +146,7 @@ export const AuthProvider = ({ children }) => {
         setFullName(profile.full_name || "Usuario");
         setIdTelegram(profile.telegram_id);
         setCurrentCycleId(profile.current_cycle_id);
-        
+
         let displayNickname = profile.full_name;
         const partesDelNombre = profile.full_name.trim().split(/\s+/); // Divide por espacios
         displayNickname = partesDelNombre.slice(0, 2).join(" ");
@@ -156,7 +158,12 @@ export const AuthProvider = ({ children }) => {
             .select("*")
             .eq("id", profile.current_cycle_id)
             .maybeSingle();
-          if (cicloInfo) setCicloData(cicloInfo);
+
+          if (cicloInfo) {
+            setCicloData(cicloInfo); // Esto actualiza el Dashboard automáticamente
+          }
+        } else {
+          setCicloData(null); // Limpiar si no hay ciclo activo
         }
       }
     } catch (err) {
@@ -166,6 +173,31 @@ export const AuthProvider = ({ children }) => {
       initialLoadDone.current = true;
     }
   }
+
+  const fetchCiclos = async () => {
+    if (!session?.user?.id) return;
+    try {
+      setLoadingCiclos(true);
+      const { data, error } = await supabase
+        .from("ciclos") // <--- TENÍAS ESTO REPETIDO DOS VECES
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("start_date", { ascending: false });
+
+      if (error) throw error;
+      setCiclos(data);
+    } catch (err) {
+      console.error("Error cargando ciclos:", err);
+    } finally {
+      setLoadingCiclos(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session) {
+      fetchCiclos();
+    }
+  }, [session]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -250,6 +282,9 @@ export const AuthProvider = ({ children }) => {
         hideToast,
         usernameTg,
         setUsernameTg,
+        ciclos,
+        loadingCiclos,
+        fetchCiclos,
         /* vistaModo,
         setVistaModo, */
       }}
