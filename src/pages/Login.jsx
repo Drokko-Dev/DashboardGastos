@@ -3,12 +3,14 @@ import { supabase } from "../lib/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import "../styles/pages/Login/login.css"; // Ruta a tu nuevo CSS
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setIsRecovering } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,6 +24,8 @@ export default function Login() {
     if (error) {
       alert("Error: " + error.message);
     } else {
+      localStorage.removeItem("bloqueo_recuperacion");
+      if (setIsRecovering) setIsRecovering(false);
       navigate("/dashboard");
     }
     setLoading(false);
@@ -29,7 +33,6 @@ export default function Login() {
 
   return (
     <div className="auth-screen">
-      {/* Orbs de fondo exclusivos para el login */}
       <div className="login-orbs">
         <div className="l-orb l-orb-1"></div>
         <div className="l-orb l-orb-2"></div>
@@ -64,6 +67,17 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+
+              {/* CAMBIO AQUÍ: Ahora es un Link que lleva a la nueva página */}
+              <div style={{ textAlign: 'right', marginTop: '5px' }}>
+                <Link
+                  to="/forgot-password"
+                  className="forgot-password-link"
+                  style={{ color: '#6366f1', fontSize: '0.85rem', textDecoration: 'none' }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>

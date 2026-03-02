@@ -10,7 +10,21 @@ import { ToastUI } from "../components/ToastUI"; // Componente para mostrar el t
 
 const AuthContext = createContext();
 
+
 export const AuthProvider = ({ children }) => {
+  // ESCUDO SÍNCRONO ESTRICTO: Solo deja pasar si trae el código secreto del correo
+  const [isRecovering, setIsRecovering] = useState(() => {
+    // Ya NO validamos el pathname, solo los tokens de seguridad de Supabase
+    const traeTokenSecreto = window.location.hash.includes("type=recovery") || window.location.search.includes("code=");
+    const hayBloqueoGlobal = localStorage.getItem("bloqueo_recuperacion") === "true";
+
+    if (traeTokenSecreto) {
+      localStorage.setItem("bloqueo_recuperacion", "true");
+      return true;
+    }
+
+    return hayBloqueoGlobal;
+  });
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   /* const [vistaModo, setVistaModo] = useState("mes"); */
@@ -201,6 +215,21 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // 1. LEEMOS EL ESCUDO GLOBAL DE OTRAS PESTAÑAS
+      const hayBloqueoGlobal = localStorage.getItem("bloqueo_recuperacion") === "true";
+
+      // 2. DETECCIÓN ESTRICTA: Ya no miramos solo la ruta, buscamos los códigos secretos
+      // Supabase manda un "type=recovery" (Hash) o un "code=" (Búsqueda)
+      const traeTokenSecreto = window.location.hash.includes("type=recovery") || window.location.search.includes("code=");
+
+      if (traeTokenSecreto || hayBloqueoGlobal) {
+        if (!hayBloqueoGlobal) localStorage.setItem("bloqueo_recuperacion", "true");
+
+        setIsRecovering(true);
+        setLoading(false);
+        return; // ¡Freno de mano total!
+      }
+
       setSession(session);
       if (session) {
         currentUserIdRef.current = session.user.id;
@@ -215,6 +244,22 @@ export const AuthProvider = ({ children }) => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (_event === "INITIAL_SESSION") return;
 
+      // 3. CAPTURAMOS EL EVENTO (Avisamos a todas las pestañas)
+      if (_event === "PASSWORD_RECOVERY") {
+        localStorage.setItem("bloqueo_recuperacion", "true"); // <-- MARCA GLOBAL
+        setIsRecovering(true);
+        return;
+      }
+
+      // Leemos la alarma global en tiempo real para las pestañas de fondo
+      const hayBloqueoGlobal = localStorage.getItem("bloqueo_recuperacion") === "true";
+
+      // Si hay un login automático pero la alarma está encendida, abortamos en todas las pestañas
+      if (_event === "SIGNED_IN" && hayBloqueoGlobal) {
+        setIsRecovering(true);
+        return; // Detiene a las pestañas de fondo antes de que hagan fetchUserProfile
+      }
+
       setSession((prev) => {
         const prevId = prev?.user?.id;
         const newId = session?.user?.id;
@@ -223,13 +268,16 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (_event === "SIGNED_IN") {
-        if (session.user.id !== currentUserIdRef.current) {
+        // Solo carga los datos si NO estamos recuperando clave ni local ni globalmente
+        if (session.user.id !== currentUserIdRef.current && !isRecovering && !hayBloqueoGlobal) {
           currentUserIdRef.current = session.user.id;
           fetchUserProfile(session.user.id);
         }
       } else if (_event === "SIGNED_OUT") {
         currentUserIdRef.current = null;
         initialLoadDone.current = false;
+        setIsRecovering(false);
+        localStorage.removeItem("bloqueo_recuperacion"); // <-- LIMPIAMOS LA ALARMA AL SALIR
         setFullName("");
         setRole("");
         setIdTelegram(null);
@@ -240,7 +288,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isRecovering]);
   // ... dentro de AuthProvider ...
 
   useEffect(() => {
@@ -285,6 +333,8 @@ export const AuthProvider = ({ children }) => {
         ciclos,
         loadingCiclos,
         fetchCiclos,
+        isRecovering,
+        setIsRecovering,
         /* vistaModo,
         setVistaModo, */
       }}

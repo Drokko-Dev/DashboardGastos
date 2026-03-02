@@ -14,7 +14,7 @@ import { Navbar } from "./components/Navbar";
 import { Landing } from "./pages/Landing/Landing";
 import { SignUp } from "./pages/SignUp";
 import { Profile } from "./pages/Profile";
-import Ciclos  from "./pages/Ciclos/Ciclos";
+import Ciclos from "./pages/Ciclos/Ciclos";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { Ayuda } from "./pages/Sidebar/Ayuda";
 import { GuiaUso } from "./pages/Sidebar/GuiaUso";
@@ -31,6 +31,8 @@ import { SobreNosotros } from "./pages/Landing/SobreNosotros";
 import { PublicLayout } from "./pages/Landing/PublicLayout";
 import { Terms } from "./pages/Landing/Terms";
 import { Soporte } from "./pages/Landing/Soporte";
+import ForgotPassword from "./pages/Login/ForgotPassword";
+import UpdatePassword from "./pages/Login/UpdatePassword"; // Asegúrate de que el nombre del archivo coincida
 
 // Un sub-componente para envolver rutas protegidas
 const PrivateLayout = ({ children }) => {
@@ -64,7 +66,7 @@ const PrivateLayout = ({ children }) => {
 };
 
 function App() {
-  const { session, loading } = useAuth();
+  const { session, loading, isRecovering } = useAuth();
   return (
     <>
       <ScrollToTop />
@@ -73,13 +75,13 @@ function App() {
           path="/"
           element={
             loading ? null :
-            !session ? (
-              <PublicLayout>
-                <Landing />
-              </PublicLayout>
-            ) : (
-              <Navigate to="/dashboard" />
-            )
+              !session || isRecovering ? (
+                <PublicLayout>
+                  <Landing />
+                </PublicLayout>
+              ) : (
+                <Navigate to="/dashboard" />
+              )
           }
         />
 
@@ -111,12 +113,26 @@ function App() {
 
         <Route
           path="/login"
-          element={loading ? null : !session ? <Login /> : <Navigate to="/dashboard" />}
+          element={loading ? null : !session || isRecovering ? <Login /> : <Navigate to="/dashboard" />}
         />
 
         <Route
           path="/signup"
           element={loading ? null : !session ? <SignUp /> : <Navigate to="/dashboard" />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={loading ? null : !session || isRecovering ? <ForgotPassword /> : <Navigate to="/dashboard" />}
+        />
+
+        <Route
+          path="/update-password"
+          element={
+            // Si el escudo de recuperación está activo, le mostramos la página.
+            // Si no, lo mandamos al Dashboard (si está logueado) o al Login (si no lo está).
+            isRecovering ? <UpdatePassword /> : (session ? <Navigate to="/dashboard" /> : <Navigate to="/login" />)
+          }
         />
 
         {/* RUTAS PRIVADAS (Ahora Dashboard vive en /dashboard) */}
@@ -161,7 +177,7 @@ function App() {
             </PrivateLayout>
           }
         />
-         <Route
+        <Route
           path="/ciclos"
           element={
             <PrivateLayout>
